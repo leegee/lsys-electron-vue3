@@ -1,6 +1,9 @@
 # lsys2
 
-wip
+## wip
+
+* Add Vue
+* Add `vm` to replace `eval`
 
 ## Project setup
 ```

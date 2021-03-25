@@ -101,9 +101,9 @@
           <p>
             <label
               >Scale
-              <select v-model="scale">
+              <select v-model="settings.scale">
                 <option
-                  v-for="option in scales"
+                  v-for="option in scales.names()"
                   :value="option"
                   v-bind:key="option"
                 >
@@ -141,27 +141,50 @@
       </div>
     </form>
 
-    <div ref="canvases"></div>
+    <div ref="canvases" id="canvases"></div>
   </section>
 </template>
 
 <style scoped>
+section {
+  color: white;
+  background: black;
+  display: block;
+  width: 100%;
+  overflow: auto;
+}
 .column {
   width: 50%;
   float: left;
+  overflow: auto;
+}
+#canvases {
+  overflow: auto;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1rem 0;
 }
 textarea {
   width: 100%;
 }
 </style>
+<style>
+canvas {
+  width: 20vw;
+  height: 20vw;
+  margin-top: 1em;
+  margin-right: 1em;
+}
+</style>
 
 <script>
 import { Vue, Options } from "vue-class-component";
+import { ipcRenderer } from "electron";
+
 import Presets, { defaultPresettings } from "@/lib/Presets";
 import { scale as tonalScales } from "tonal";
-
 import logger from "@/lib/gui/Logger";
-// import LsysParametric from '../LsysParametric';
+import LsysParametric from "@/lib/LsysParametric";
 import LsysRenderer from "@/lib/gui/LsysRenderer";
 
 @Options({
@@ -172,23 +195,13 @@ export default class Home extends Vue {
   scales = tonalScales;
 
   mounted() {
-    this.loadPreset(0);
-  }
-
-  actionGenerate() {
-    logger.debug("Enter actionGenerate");
-    const canvas = window.document.createElement("canvas");
-    this.$refs.canvases.insertBefore(canvas, this.$refs.canvases.firstChild);
-
-    this.lsysRenderer = new LsysRenderer(this.settings, canvas, logger);
-
-    canvas.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
+    ipcRenderer.on("load-preset", (_event, presetIndex) => {
+      this.loadPreset(presetIndex);
     });
-
-    logger.silly("Call service to start Lsys with", this.settings);
-    this.service("start", this.settings);
+    ipcRenderer.on("clear-canvases", () => {
+      this.$refs.canvases.innerHTML = "";
+    });
+    this.loadPreset();
   }
 
   loadPreset(idx = 0) {
@@ -209,6 +222,42 @@ export default class Home extends Vue {
     };
 
     this.actionGenerate();
+  }
+
+  actionGenerate() {
+    logger.debug("Enter actionGenerate");
+    const canvas = window.document.createElement("canvas");
+    this.$refs.canvases.insertBefore(canvas, this.$refs.canvases.firstChild);
+
+    this.lsysRenderer = new LsysRenderer(this.settings, canvas, logger);
+
+    canvas.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+
+    logger.silly("Call service to start Lsys with", this.settings);
+
+    const lsys = new LsysParametric({
+      ...this.settings,
+      logger,
+      // postRenderCallback: () => {
+      //     process.send({ cmd: 'call', methodName: 'serviceDoneGeneration', content: lsys.content });
+      // }
+    });
+    lsys.generate(this.settings.totalGenerations);
+
+    logger.info("Service.start finished, calling parent.lsysDone");
+
+    // Formerly service.lsysDone
+    this.lsysRenderer.render(lsys.content, this.midi || undefined);
+    this.settings.contentDisplay = lsys.content;
+
+    this.lsysRenderer.finalise();
+    // canvas.addEventListener("click", (e) =>
+    //   this.openElementInNewWindow(e.target)
+    // );
+    // this.actionCreateMidi();
   }
 }
 </script>
