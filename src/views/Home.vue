@@ -117,6 +117,7 @@
             <label
               >Wrap at angle
               <input
+                disabled
                 type="range"
                 id="wrapAngleAt"
                 min="0"
@@ -251,9 +252,9 @@ export default class Home extends Vue {
 
     // Formerly service.lsysDone
     this.lsysRenderer.render(lsys.content, this.midi || undefined);
+    this.lsysRenderer.finalise();
     this.settings.contentDisplay = lsys.content;
 
-    this.lsysRenderer.finalise();
     // canvas.addEventListener("click", (e) =>
     //   this.openElementInNewWindow(e.target)
     // );
