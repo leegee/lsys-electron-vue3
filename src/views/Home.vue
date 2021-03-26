@@ -244,14 +244,11 @@ export default class Home extends Vue {
       block: "end",
     });
 
-    logger.silly("Call service to start Lsys with", this.settings);
+    logger.silly("Start Lsys with", this.settings);
 
     const lsys = new LsysParametric({
       ...this.settings,
       logger: this.logger,
-      // postRenderCallback: () => {
-      //     process.send({ cmd: 'call', methodName: 'serviceDoneGeneration', content: lsys.content });
-      // }
     });
 
     lsys.generate(this.settings.totalGenerations);
@@ -261,9 +258,15 @@ export default class Home extends Vue {
     this.lsysRenderer.finalise();
     this.working = false;
 
-    // canvas.addEventListener("click", (e) =>
-    //   this.openElementInNewWindow(e.target)
-    // );
+    canvas.addEventListener("click", (e) => {
+      e.preventDefault();
+      ipcRenderer.send("open-canvas-window", {
+        rules: this.settings.rules,
+        title: this.settings.title,
+        canvasData: canvas.toDataURL(),
+        totalGenerations: this.totalGenerations,
+      });
+    });
     // this.actionCreateMidi();
   }
 }

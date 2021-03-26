@@ -1,10 +1,12 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 import "./electron/menu";
+
+let win;
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -15,7 +17,7 @@ protocol.registerSchemesAsPrivileged([
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1000,
     height: 1000,
     webPreferences: {
@@ -90,3 +92,21 @@ if (isDevelopment) {
   }
 }
 
+ipcMain.on('open-canvas-window', (_event, { canvasData, title, rules, totalGenerations }) => {
+  const popup = new BrowserWindow({
+    parent: win,
+    show: false,
+    titleBar: true,
+    title: title + ' ' + totalGenerations + " generations of " + rules,
+    backgroundColor: "#000000",
+  });
+  popup.on('page-title-updated', function (e) {
+    e.preventDefault()
+  });
+  popup.loadURL(canvasData);
+  popup.setMenu(null);
+  popup.maximize();
+  popup.once("ready-to-show", () => {
+    popup.show();
+  });
+});
