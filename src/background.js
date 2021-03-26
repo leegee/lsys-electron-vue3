@@ -19,6 +19,7 @@ async function createWindow() {
     width: 1000,
     height: 1000,
     webPreferences: {
+      contextIsolation: false,
 
       // Required for Spectron testing - yuck
       enableRemoteModule: true,
@@ -89,6 +90,3 @@ if (isDevelopment) {
   }
 }
 
-// ipcMain.handle('some-name', async (event, someArgument) => {
-
-// });

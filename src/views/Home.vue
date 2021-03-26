@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section v-bind:class="{ working: working === true }">
     <form>
       <div class="column">
         <fieldset>
@@ -154,6 +154,10 @@ section {
   width: 100%;
   overflow: auto;
 }
+section.working {
+  display: none;
+  cursor: progress;
+}
 .column {
   width: 50%;
   float: left;
@@ -194,6 +198,8 @@ import LsysRenderer from "@/lib/gui/LsysRenderer";
 export default class Home extends Vue {
   settings = {};
   scales = tonalScales;
+  working = false;
+  lsys = null;
 
   mounted() {
     ipcRenderer.on("load-preset", (_event, presetIndex) => {
@@ -227,6 +233,7 @@ export default class Home extends Vue {
 
   actionGenerate() {
     logger.debug("Enter actionGenerate");
+    this.working = true;
     const canvas = window.document.createElement("canvas");
     this.$refs.canvases.insertBefore(canvas, this.$refs.canvases.firstChild);
 
@@ -241,19 +248,18 @@ export default class Home extends Vue {
 
     const lsys = new LsysParametric({
       ...this.settings,
-      logger,
+      logger: this.logger,
       // postRenderCallback: () => {
       //     process.send({ cmd: 'call', methodName: 'serviceDoneGeneration', content: lsys.content });
       // }
     });
+
     lsys.generate(this.settings.totalGenerations);
 
-    logger.info("Service.start finished, calling parent.lsysDone");
-
-    // Formerly service.lsysDone
+    this.settings.contentDisplay = lsys.content;
     this.lsysRenderer.render(lsys.content, this.midi || undefined);
     this.lsysRenderer.finalise();
-    this.settings.contentDisplay = lsys.content;
+    this.working = false;
 
     // canvas.addEventListener("click", (e) =>
     //   this.openElementInNewWindow(e.target)
