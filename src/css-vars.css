@@ -1,0 +1,5 @@
+html {
+  --app-bg: black;
+  --app-fg: oldlace;
+  --app-fg-dim: rgba(253, 245, 230, 0.63);
+}

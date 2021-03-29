@@ -102,10 +102,10 @@ export default class MIDI {
         }
         log.silly('Time Offset', timeOffset);
 
-        Object.keys(notes.on).forEach((startTimeIndex, arrayIndex) => {
+        Object.keys(notes.on).forEach((startTimeIndex) => {
             const chordToPlay = {};
 
-            notes.on[startTimeIndex].forEach((noteValue, arrayIndex) => {
+            notes.on[startTimeIndex].forEach((noteValue) => {
                 const pitch = pitchOffset + Math.round(noteValue); // Here fit to scale
                 const noteIndex = Math.abs(pitch) % scaleOfNoteLetters.length;
                 const note = scaleOfNoteLetters[noteIndex];

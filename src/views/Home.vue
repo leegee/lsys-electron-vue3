@@ -3,6 +3,7 @@
     <form>
       <div class="column">
         <fieldset>
+          <legend>>{{ settings.title || "L-system" }}</legend>
           <p>
             <label
               >Constants
@@ -171,6 +172,19 @@ section.working {
 }
 textarea {
   width: 100%;
+}
+textarea,
+input,
+select {
+  background: silver;
+}
+
+label {
+  font-size: 1rem;
+}
+code {
+  font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 }
 </style>
 <style>
