@@ -2,10 +2,12 @@ import { createStore } from 'vuex';
 
 export default createStore({
   state: {
-    midiPorts: []
+    outputDevicesList: {},
+    outputDevice: null,
   },
   mutations: {
-    setMidiPorts: (state, midiPorts) => state.midiPorts = midiPorts,
+    setOutputDeviceById: (state, outputDeviceId) => state.outputDevice = state.outputDevicesList[outputDeviceId],
+    setOutputDevicesList: (state, outputDevicesList) => state.outputDevicesList = outputDevicesList,
   },
   actions: {
   },

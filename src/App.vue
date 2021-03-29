@@ -29,5 +29,7 @@ import "./css-vars.css";
 @Options({
   components: { CustomMenuBar },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  async created() {}
+}
 </script>

@@ -5,11 +5,8 @@
         <button @click="openMenu($event.x, $event.y)">
           <i class="fas fa-bars"></i>
         </button>
-        <select title="MIDI Out" id="midi-out">
-          <option v-for="port in $store.state.midiPorts" :key="port">
-            {{ port }}
-          </option>
-        </select>
+
+        <MidiController />
       </header>
 
       <aside class="right">
@@ -27,7 +24,7 @@
   </section>
 </template>
 
-<style scoepd>
+<style>
 @import "../assets/fa/fa.css";
 
 #menu-bar {
@@ -48,7 +45,7 @@
   align-items: center;
 }
 
-button {
+#menu-bar button {
   -webkit-app-region: no-drag;
   height: 100%;
   padding: 0 15px;
@@ -57,7 +54,7 @@ button {
   outline: none;
 }
 
-button:hover {
+#menu-bar button:hover {
   background: rgba(221, 221, 221, 0.2);
 }
 
@@ -65,7 +62,7 @@ button:hover {
   background: rgb(255, 0, 0);
 }
 
-button i {
+#menu-bar button i {
   color: var(--app-fg);
 }
 
@@ -78,17 +75,16 @@ button i {
 
 <script>
 import { Vue, Options } from "vue-class-component";
-import { Watch } from "vue-property-decorator";
 import { ipcRenderer } from "electron";
+import MidiController from "@/components/MidiController";
 
 @Options({
-  components: {},
+  components: {
+    MidiController,
+  },
 })
 export default class CustomMenuBar extends Vue {
-  @Watch("person", { immediate: true, deep: true })
-  onPersonChanged1(val, oldVal) {
-    console.log(val, oldVal);
-  }
+  outputDevice = null;
 
   async maxUnmax() {
     const isMaximized = await ipcRenderer.invoke("max-unmax-window");
