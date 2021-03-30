@@ -1,69 +1,60 @@
 <template>
-  <section v-bind:class="{ working: working === true }">
+  <section :class="{ working: working === true }">
     <form>
       <div class="column">
         <fieldset>
-          <legend>>{{ settings.title || "L-system" }}</legend>
+          <legend>{{ settings.title || "L-system" }}</legend>
           <p>
-            <label
+            <label title="#define name value"
               >Constants
-              <small>
-                <code>#define name value</code> &mdash; one per line
-              </small>
-              <textarea id="variables" v-model="settings.variables"></textarea>
+              <textarea id="variables" v-model="settings.variables" />
+            </label>
+          </p>
+
+          <p>
+            <label title="F(x,y): x==1 && y==2 => NewPattern">Rules </label>
+            <textarea id="rules" v-model="settings.rules" />
+          </p>
+
+          <p>
+            <label
+              >Axiom<input id="start" v-model="settings.start" type="text" />
             </label>
           </p>
 
           <p>
             <label
-              >Rules
-              <small>
-                <code>F(x,y): x==1 && y==2 => NewPattern</code>
-                &mdash; one rule per line
-              </small>
-            </label>
-            <textarea id="rules" v-model="settings.rules"></textarea>
-          </p>
-
-          <p>
-            <label
-              >Axiom<input type="text" id="start" v-model="settings.start" />
-            </label>
-          </p>
-
-          <p>
-            <label
-              >Angle
+              >Branch Angle
               <input
-                type="range"
                 id="angle"
+                v-model="settings.angle"
+                type="range"
                 min="0"
                 max="360"
                 aria-valuemin="0"
                 aria-valuemax="360"
-                v-model="settings.angle"
               />
             </label>
 
             <label
               >Generations
               <input
+                id="totalGenerations"
+                v-model="settings.totalGenerations"
                 type="range"
                 min="1"
                 max="10"
                 aria-valuemin="1"
                 aria-valuemax="10"
-                id="totalGenerations"
-                v-model="settings.totalGenerations"
               />
             </label>
           </p>
         </fieldset>
 
         <input
-          type="button"
           id="actionGenerate"
-          value="🖼 Regenerate Image & MIDI"
+          type="button"
+          value="Regenerate Image &amp; MIDI"
           @click="actionGenerate"
         />
         <!-- <input type="button" id="actionCreateMidi" value="🎼Regenerate MIDI" /> -->
@@ -76,9 +67,9 @@
             <label
               >Allow notes to be placed back in the past?
               <input
-                type="checkbox"
                 id="backInTime"
                 v-model="settings.backInTime"
+                type="checkbox"
               />
             </label>
           </p>
@@ -87,11 +78,11 @@
             <label
               >Note duration
               <input
+                id="duration"
+                v-model="settings.duration"
                 type="range"
                 min="1"
                 max="250"
-                id="duration"
-                v-model="settings.duration"
               />
             </label>
 
@@ -105,8 +96,8 @@
               <select v-model="settings.scale">
                 <option
                   v-for="option in scales.names()"
+                  :key="option"
                   :value="option"
-                  v-bind:key="option"
                 >
                   {{ option }}
                 </option>
@@ -116,16 +107,15 @@
 
           <p>
             <label
-              >Wrap at angle
+              >Wrap Angle
               <input
-                disabled
+                id="wrapAtAngle"
+                v-model="settings.wrapAtAngle"
                 type="range"
-                id="wrapAngleAt"
                 min="0"
                 max="360"
                 aria-valuemin="0"
                 aria-valuemax="360"
-                v-model="settings.wrapAngleAt"
               />
             </label>
           </p>
@@ -133,76 +123,25 @@
 
         <fieldset>
           <legend>Output</legend>
-          <textarea
-            id="contentDisplay"
-            v-model="settings.contentDisplay"
-          ></textarea>
+          <textarea id="contentDisplay" v-model="settings.contentDisplay" />
         </fieldset>
 
-        <div id="player"></div>
+        <div id="player" />
       </div>
     </form>
 
-    <div ref="canvases" id="canvases"></div>
+    <div id="canvases" ref="canvases" />
   </section>
 </template>
-
-<style scoped>
-section {
-  color: white;
-  background: black;
-  display: block;
-  width: 100%;
-  overflow: auto;
-}
-section.working {
-  display: none;
-  cursor: progress;
-}
-.column {
-  width: 50%;
-  float: left;
-  overflow: auto;
-}
-#canvases {
-  overflow: auto;
-  width: 100%;
-  margin-top: 1rem;
-  padding: 1rem 0;
-}
-textarea {
-  width: 100%;
-}
-textarea,
-input,
-select {
-  background: silver;
-}
-
-label {
-  font-size: 1rem;
-}
-code {
-  font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
-    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
-}
-</style>
-<style>
-canvas {
-  width: 20vw;
-  height: 20vw;
-  margin-top: 1em;
-  margin-right: 1em;
-}
-</style>
 
 <script>
 import { Vue, Options } from "vue-class-component";
 import { ipcRenderer } from "electron";
 
+import Midi from "@/lib/MIDI";
 import Presets, { defaultPresettings } from "@/lib/Presets";
 import { scale as tonalScales } from "tonal";
-import logger from "@/lib/gui/Logger";
+import Logger from "@/lib/gui/Logger";
 import LsysParametric from "@/lib/LsysParametric";
 import LsysRenderer from "@/lib/gui/LsysRenderer";
 
@@ -210,23 +149,34 @@ import LsysRenderer from "@/lib/gui/LsysRenderer";
   components: {},
 })
 export default class Home extends Vue {
+  midi = null;
   settings = {};
   scales = tonalScales;
+  midiFilePath = "output.mid";
   working = false;
   lsys = null;
+  logger = Logger;
 
   mounted() {
     ipcRenderer.on("load-preset", (_event, presetIndex) => {
       this.loadPreset(presetIndex);
     });
+
     ipcRenderer.on("clear-canvases", () => {
       this.$refs.canvases.innerHTML = "";
     });
+
+    this.midi = new Midi({
+      window,
+      outputMidiPath: this.midiFilePath,
+      logger: this.logger,
+    });
+
     this.loadPreset();
   }
 
   loadPreset(idx = 0) {
-    logger.info("Load preset ", idx, Presets[idx]);
+    this.logger.info("Load preset ", idx, Presets[idx]);
 
     if (!Presets[idx].totalGenerations) {
       this.logger.warn(
@@ -246,19 +196,19 @@ export default class Home extends Vue {
   }
 
   actionGenerate() {
-    logger.debug("Enter actionGenerate");
+    this.logger.debug("Enter actionGenerate");
     this.working = true;
     const canvas = window.document.createElement("canvas");
     this.$refs.canvases.insertBefore(canvas, this.$refs.canvases.firstChild);
 
-    this.lsysRenderer = new LsysRenderer(this.settings, canvas, logger);
+    this.lsysRenderer = new LsysRenderer(this.settings, canvas, this.logger);
 
     canvas.scrollIntoView({
       behavior: "smooth",
       block: "end",
     });
 
-    logger.silly("Start Lsys with", this.settings);
+    this.logger.silly("Start Lsys with", this.settings);
 
     const lsys = new LsysParametric({
       ...this.settings,
@@ -270,7 +220,14 @@ export default class Home extends Vue {
     this.settings.contentDisplay = lsys.content;
     this.lsysRenderer.render(lsys.content, this.midi || undefined);
     this.lsysRenderer.finalise();
-    this.working = false;
+
+    this.logger.silly("create midi");
+    this.midi.playFile(
+      this.midi.notesContent,
+      this.settings.scale,
+      this.settings.duration
+    );
+    this.logger.silly("done create midi");
 
     canvas.addEventListener("click", (e) => {
       e.preventDefault();
@@ -281,7 +238,8 @@ export default class Home extends Vue {
         totalGenerations: this.totalGenerations,
       });
     });
-    // this.actionCreateMidi();
+
+    this.working = false;
   }
 }
 </script>
@@ -289,3 +247,62 @@ export default class Home extends Vue {
 
 
 
+
+<style scoped>
+section {
+  color: white;
+  background: black;
+  display: block;
+  width: 100%;
+  overflow: auto;
+}
+section.working {
+  display: none;
+  cursor: progress;
+}
+.column {
+  width: 50%;
+  float: left;
+  overflow: auto;
+}
+input[type="text"] {
+  margin-left: 0.3em;
+}
+#actionGenerate {
+  float: right;
+  border: 0.5rem solid rgb(136, 136, 136);
+  padding: 0.3rem;
+  margin: 1rem;
+}
+#player {
+  margin: 1rem;
+}
+#canvases {
+  overflow: auto;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1rem 0;
+}
+textarea {
+  width: 100%;
+}
+textarea,
+input,
+select {
+  background: silver;
+}
+
+label,
+label * {
+  font-size: 1rem;
+  vertical-align: middle;
+}
+</style>
+<style>
+canvas {
+  width: 20vw;
+  height: 20vw;
+  margin-top: 1em;
+  margin-right: 1em;
+}
+</style>

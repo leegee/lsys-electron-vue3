@@ -1,6 +1,10 @@
 const DEGREE_TO_RADIAN_FACTOR = Math.PI / 180.0;
 
-const USE_AFTER_RENDER = true;
+Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
+    const max = Math.max.apply(Math, this);
+    const min = Math.min.apply(Math, this);
+    return this.map(num => (scaledMax - scaledMin) * (num - min) / (max - min) + scaledMin);
+}
 
 const LsysRenderer = class LsysRenderer {
     preparedColours = [];
@@ -9,10 +13,6 @@ const LsysRenderer = class LsysRenderer {
     ctx = null;
     x = null;
     y = null;
-    notesContent = {
-        on: {},
-        off: {}
-    };
     stepped = null;
 
     static dsin(degrees) {
@@ -25,15 +25,14 @@ const LsysRenderer = class LsysRenderer {
 
     constructor(settings, canvas, logger) {
         if (!settings) {
-            throw new TypeError('No settings object passed to constructor');
+            throw new TypeError('No settings object passed to LsysRenderer.new as first param');
         }
         if (!canvas) {
-            throw new TypeError('No canvas HTMLCanvasObject passed to constructor');
+            throw new TypeError('No HTMLCanvasElement passed to LsysRenderer.new 2nd param');
         }
         if (!logger) {
-            throw new TypeError('No Logger object passed to constructor');
+            throw new TypeError('No Logger object passed to LsysRenderer.new as first param');
         }
-
 
         this.settings = settings;
         this.canvas = canvas;
@@ -50,11 +49,16 @@ const LsysRenderer = class LsysRenderer {
         this.settings.initX = Number(this.settings.initX) || 0;
         this.settings.initY = Number(this.settings.initY) || 0;
 
-        this.x = this.maxX = this.minX = Number(this.settings.initX);
-        this.y = this.maxY = this.minY = Number(this.settings.initY);
+        this.x = Number(this.settings.initX);
+        this.y = Number(this.settings.initY);
+
+        this.maxY = -Infinity;
+        this.maxX = -Infinity;
+        this.minX = Infinity;
+        this.minY = Infinity;
 
         if (!this.settings.colours) {
-            throw new TypeError('No colours supplied to constructor in "settings"');
+            throw new TypeError('No colours supplied to new LsysRenderer() as "settings"');
         }
 
         for (let i = 0; i < this.settings.colours.length; i++) {
@@ -81,36 +85,26 @@ const LsysRenderer = class LsysRenderer {
     }
 
     render(content, midiRenderer) {
-        this._render({ content, draw: false });
-        if (USE_AFTER_RENDER) {
-            this._afterRender(content, midiRenderer);
-        }
-    }
+        midiRenderer.newRender();
+        this._render({ content, draw: false, midiRenderer });
 
-    finalise() {
-        this.logger.verbose('Enter finalise');
-        if (this.settings.finally && typeof this.settings.finally === 'function') {
-            this.logger.verbose('Call finally');
-            this.settings.finally.call(this);
-        }
-        this.logger.verbose('Leave finalise');
-    }
+        this.resizeCanvas();
 
-    _render({ content, draw, midiRenderer }) {
-        this.logger.info('RENDER: draw:%s, midiRenderer:%s', draw, midiRenderer ? true : false);
+        this._render({ content, draw: true, midiRenderer });
+
         if (midiRenderer) {
             this.logger.info('x'.repeat(40));
             this.logger.info(content);
             this.logger.info('x'.repeat(40));
         }
+
+        midiRenderer.afterFinalRender();
+    }
+
+    _render({ content, draw, midiRenderer }) {
+        this.logger.info('RENDER: draw:%s, midiRenderer:%s', draw, midiRenderer ? true : false);
         const states = [];
-        this.notesContent = {
-            on: {},
-            off: {}
-        };
         this.stepped = 0;
-        this.noteTick = 0;
-        // this.penUp = !draw;
         this.punUp = false;
         let dir = 0;
 
@@ -154,33 +148,19 @@ const LsysRenderer = class LsysRenderer {
                     break;
             }
 
-            if (draw) {
-                this.logger.debug('SET DIR', dir);
-                this._turtleGraph(dir);
-                this._addNotes(dir, midiRenderer);
-                this.stepped++;
-            }
-        }
-    }
+            this.logger.debug('SET DIR', dir);
+            this._turtleGraph(dir);
 
-    _addNotes(dir, midiRenderer) {
-        // always forwards
-        const startTick = this.x; // this.stepped
-        const pitchIndex = this.y;
-        const duration = 1;
-
-        if (!this.penUp) {
-            this.notesContent.on[startTick] = this.notesContent.on[startTick] || [];
-            this.notesContent.off[startTick] = this.notesContent.off[startTick] || [];
-
-            this.notesContent.on[startTick].push(pitchIndex);
-            this.notesContent.off[startTick].push(duration);
-
-            if (midiRenderer) {
-                // Need a way to render a whole generation to preserve the polyphony created by branches?
-                midiRenderer.playNote({
-                    startTick, pitchIndex, duration
+            if (!this.penUp) {
+                midiRenderer.addNotes({
+                    startTick: this.x,
+                    duration: 1,
+                    pitchIndex: this.y
                 });
+            }
+
+            if (draw) {
+                this.stepped++;
             }
         }
     }
@@ -190,7 +170,6 @@ const LsysRenderer = class LsysRenderer {
     }
 
     _turtleGraph(dir) {
-
         this.ctx.beginPath();
 
         // if (this.settings.generationsScaleLines > 0) {
@@ -205,9 +184,6 @@ const LsysRenderer = class LsysRenderer {
 
         this.x += (LsysRenderer.dcos(dir) * this.settings.turtleStepX);
         this.y += (LsysRenderer.dsin(dir) * this.settings.turtleStepY);
-
-        // this.x += this.settings.xoffset;
-        // this.y += this.settings.yoffset;
 
         if (!this.penUp) {
             const x = Math.round(this.x);
@@ -282,10 +258,15 @@ const LsysRenderer = class LsysRenderer {
         this.logger.info('Leave resize after scaling %d, %d to %d, %d', sx, sy, this.canvas.width, this.canvas.height);
     }
 
-    _afterRender(content, midiRenderer) {
-        this.resizeCanvas();
-        this._render({ content, draw: true, midiRenderer });
+    finalise() {
+        this.logger.verbose('Enter finalise');
+        if (this.settings.finally && typeof this.settings.finally === 'function') {
+            this.logger.verbose('Call finally');
+            this.settings.finally.call(this);
+        }
+        this.logger.verbose('Leave finalise');
     }
+
 };
 
 module.exports = LsysRenderer;

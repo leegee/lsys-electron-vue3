@@ -17,6 +17,9 @@ main {
   margin: 0;
   background-color: var(--app-bg);
   color: var(--app-fg);
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 </style>
 

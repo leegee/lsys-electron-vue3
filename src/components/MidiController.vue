@@ -1,7 +1,7 @@
 <template>
   <select
-    title="MIDI Out"
     id="midi-out"
+    title="MIDI Out"
     @select="onMidiOutputDeviceSelected($event.target.value)"
   >
     <optgroup label="MIDI Ou:">
@@ -16,13 +16,16 @@
   </select>
 </template>
 
-<style scoped>
-* {
-  color: var(--app-fg);
-}
-</style>
 <script>
 import { Vue, Options } from "vue-class-component";
+import { Watch } from "vue-property-decorator";
+
+const NOTE_OFF = 0x80;
+const NOTE_ON = 0x90;
+
+// function frequencyFromNoteNumber(note) {
+//   return 440 * Math.pow(2, (note - 69) / 12);
+// }
 
 @Options({
   components: {},
@@ -30,11 +33,30 @@ import { Vue, Options } from "vue-class-component";
 export default class MidiController extends Vue {
   outputDevicesList = {};
   midiAccess = null;
+  connection = null; // : MIDIConnectionEvent
+
+  @Watch("connection")
+  onConnection() {
+    this.sendNote(60);
+  }
 
   async created() {
+    const permissionStatus = await navigator.permissions.query({
+      name: "midi",
+    });
+    permissionStatus.onchange = () => console.log(permissionStatus.state);
+    console.log("Midi permissions", permissionStatus.state);
+    if (permissionStatus.state !== "granted") {
+      throw new Error("No MIDI permissions");
+    }
+
     this.midiAccess = await navigator.requestMIDIAccess();
-    this.midiAccess.onstatechange = (e) =>
-      console.warn(e.port.name, e.port.manufacturer, e.port.state);
+    this.midiAccess.onstatechange = (e) => {
+      console.warn(e, e.port.name, e.port.state);
+      if (e instanceof MIDIConnectionEvent) {
+        this.connection = e;
+      }
+    };
 
     const outputDevicesList = {};
     this.midiAccess.outputs.forEach(
@@ -42,21 +64,37 @@ export default class MidiController extends Vue {
     );
     this.$store.commit("setOutputDevicesList", outputDevicesList);
 
-    this.onMidiOutputDeviceSelected(
-      this.$store.state.outputDevicesList[
-        Object.keys(this.$store.state.outputDevicesList)[0]
-      ].id
-    );
+    const firstListedDevice = this.$store.state.outputDevicesList[
+      Object.keys(this.$store.state.outputDevicesList)[0]
+    ];
+    this.onMidiOutputDeviceSelected(firstListedDevice.id);
   }
 
   onMidiOutputDeviceSelected(outputDevicesListId) {
-    // TODO: send this as a message
-    if (this.$store.state.outputDevice) {
-      this.$store.state.outputDevice.close();
-    }
-
     this.$store.commit("setOutputDeviceById", outputDevicesListId);
-    // this.$store.state.outputDevice.send([command, note, 10]);
+  }
+
+  sendNote(pitch = 60, velocity = 0x40, durationMs = 1200.0) {
+    console.log(
+      "send note: Device/pitch/vel/dur",
+      this.$store.state.outputDevice,
+      pitch,
+      velocity,
+      durationMs
+    );
+    this.$store.state.outputDevice.send([NOTE_ON, pitch, velocity]);
+    this.$store.state.outputDevice.send([NOTE_OFF, pitch, velocity]);
+    this.$store.state.outputDevice.send(
+      [NOTE_OFF, pitch, velocity],
+      window.performance.now() + durationMs
+    );
+    console.log("sent note");
   }
 }
 </script>
+
+<style scoped>
+* {
+  color: var(--app-fg);
+}
+</style>

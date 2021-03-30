@@ -59,7 +59,7 @@ export default class LsysParametric {
 			throw new TypeError('options was not an object, %O', options);
 		}
 
-		this.options.logger = options.logger || console;
+		this.options.logger = options.logger;
 		delete options.logger;
 
 		this.options.logger.info('setOptions: ', options);

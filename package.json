@@ -18,8 +18,15 @@
     "@babel/plugin-proposal-decorators": "^7.13.5",
     "@babel/plugin-transform-classes": "^7.13.0",
     "core-js": "^3.6.5",
+    "electron": "^11.0.0",
     "electron-log": "^4.3.2",
+    "jazz-midi-electron": "^1.1.6",
+    "jzz-gui-player": "^1.4.7",
+    "jzz-midi-smf": "^1.4.9",
+    "jzz-synth-osc": "^1.1.8",
+    "jzz-synth-tiny": "^1.2.6",
     "midi": "^1.0.0",
+    "midi-writer-js": "^1.7.5",
     "tonal": "^2.2.2",
     "vue": "^3.0.0",
     "vue-class-component": "^8.0.0-0",
@@ -40,7 +47,6 @@
     "babel-eslint": "^10.1.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "chromedriver": "^84.0.1",
-    "electron": "^11.0.0",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^7.0.0",
@@ -77,7 +83,8 @@
           "**/*.spec.js?x?"
         ],
         "env": {
-          "jest": true
+          "jest": true,
+          "browser": true
         }
       }
     ]

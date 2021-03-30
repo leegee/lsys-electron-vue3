@@ -12,8 +12,8 @@ export default [
         canvasHeight: 760,
         turtleStepX: 10,
         turtleStepY: 10,
-        wrapAngleAt: 0,
-        lineWidth: 11,
+        wrapAtAngle: 0,
+        lineWidth: 8,
         initially: function () {
             this.ctx.rotate(180 * Math.PI / 180);
         }
@@ -30,7 +30,7 @@ export default [
         canvasHeight: 500,
         turtleStepX: 5,
         turtleStepY: 5,
-        wrapAngleAt: 0,
+        wrapAtAngle: 0,
         lineWidth: 1
     },
 
@@ -47,7 +47,7 @@ export default [
         canvasHeight: 500,
         turtleStepX: 2,
         turtleStepY: 2,
-        wrapAngleAt: 0,
+        wrapAtAngle: 0,
         lineWidth: 1
     },
 
@@ -65,7 +65,7 @@ export default [
         turtleStepX: 5,
         turtleStepY: 5,
         totalGenerations: 5,
-        wrapAngleAt: 0,
+        wrapAtAngle: 0,
         lineWidth: 0.4,
         time_scale_lines: 5
     },
@@ -106,7 +106,7 @@ export default [
         turtleStepY: 4,
         totalGenerations: 5,
         lineWidth: 1,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -123,7 +123,7 @@ export default [
         turtleStepY: 8,
         totalGenerations: 6,
         lineWidth: 3,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     }, {
         title: 'Tree x',
         variables: '',
@@ -138,7 +138,7 @@ export default [
         turtleStepY: 8,
         totalGenerations: 6,
         lineWidth: 3,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -155,7 +155,7 @@ export default [
         turtleStepY: 10,
         totalGenerations: 2,
         lineWidth: 3,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -172,7 +172,7 @@ export default [
         turtleStepY: 10,
         totalGenerations: 4,
         lineWidth: 3,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -189,7 +189,7 @@ export default [
         turtleStepY: 4,
         totalGenerations: 4,
         lineWidth: 6,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -205,7 +205,7 @@ export default [
         turtleStepX: 4,
         turtleStepY: 4,
         totalGenerations: 5,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -221,7 +221,7 @@ export default [
         turtleStepX: 4,
         turtleStepY: 4,
         totalGenerations: 5,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     },
 
     {
@@ -238,7 +238,7 @@ export default [
         turtleStepY: 5,
         totalGenerations: 7,
         lineWidth: 8,
-        wrapAngleAt: 12
+        wrapAtAngle: 12
     }
 ];
 

@@ -40,12 +40,12 @@
 // // module.exports = log;
 
 module.exports = {
-    // ...log,
-    ...console,
-    verbose: (...args) => {
-        console.debug(...args);
-    },
-    silly: (...args) => {
-        console.debug(...args);
-    },
+    // ...console,
+    silly: () => { },
+    verbose: () => { },
+    debug: () => { },
+    log: () => { },
+    info: () => console.info,
+    warn: () => console.warn,
+    error: () => console.error,
 };

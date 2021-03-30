@@ -1,22 +1,38 @@
-const fs = require('fs');
+/* Fix this to remove silence at the start:
 
-const tonal = require("tonal");
+C1C4FF[C3+C1F[C3+X]F[C3-X]+X]C4FF[C3-C1F[C3+X]F[C3-X]+X]+C1F[C3+X]F[C3-X]+X
 
-const MidiWriter = require('midi-writer-js');
-const JZZ = require('jzz');
-require('jzz-midi-smf')(JZZ);
-require('jzz-gui-player')(JZZ);
-require('jzz-synth-tiny')(JZZ);
-require('jzz-synth-osc')(JZZ);
-require('jazz-midi-electron')();
+*/
 
-const log = require('./gui/Logger');
+import JZZ from "jzz";
+import jzzSmf from "jzz-midi-smf";
+jzzSmf(JZZ);
+import jzzGui from "jzz-gui-player";
+jzzGui(JZZ);
+import jzzSynth from "jzz-synth-tiny";
+jzzSynth(JZZ);
+import jzzOsc from "jzz-synth-osc";
+jzzOsc(JZZ);
+import jzzElectron from "jazz-midi-electron";
+jzzElectron(JZZ);
+
+import fs from 'fs';
+import { Scale } from 'tonal';
+import MidiWriter from 'midi-writer-js';
+
+import Logger from './gui/Logger';
 
 export default class MIDI {
     options = {};
     outputs = [];
     outputToUse = 1;
     usePorts = {};
+    logger = Logger;
+
+    notesContent = {
+        on: {},
+        off: {},
+    };
 
     static pitchOffset(lowestNote, highestNote) {
         return Math.floor(
@@ -24,7 +40,7 @@ export default class MIDI {
         );
     }
 
-    constructor(options) {
+    constructor(options = {}) {
         JZZ.synth.Tiny.register('Web Audio');
         JZZ.synth.OSC.register('OSC');
         this.player = new JZZ.gui.Player({
@@ -34,16 +50,14 @@ export default class MIDI {
 
         Object.keys(options).forEach(option => this[option] = options[option]);
 
-        this.port = JZZ().openMidiOut().or(() => alert('Cannot open MIDI port.'));
-    }
+        this.logger = this.options.logger || this.logger;
 
-    playNote({ startTick, pitchIndex, duration }) {
-        console.info('RT PLAY NOTE: ', { startTick, pitchIndex, duration });
+        this.port = JZZ().openMidiOut().or(() => alert('Cannot open output MIDI port.'));
     }
 
     playFile(notes, scaleName, duration) {
-        const scaleOfNoteLetters = tonal.Scale.notes('A ' + scaleName);
-        log.info('SCALE NOTES: ', scaleOfNoteLetters);
+        const scaleOfNoteLetters = Scale.notes('A ' + scaleName);
+        this.logger.info('SCALE NOTES: ', scaleOfNoteLetters);
 
         this.create(notes, scaleOfNoteLetters, duration);
 
@@ -58,9 +72,63 @@ export default class MIDI {
             this.player.load(smf);
             this.player.play();
         } catch (e) {
-            console.error(e);
+            this.logger.error(e);
         }
     }
+
+    newRender() {
+        this.notesContent = {
+            on: {},
+            off: {}
+        };
+    }
+
+    afterFinalRender() {
+        const time2pitch = Object.keys(this.notesContent.on);
+        const timeToNoteoff = Object.keys(this.notesContent.off);
+        const minT = Math.min(...time2pitch);
+
+        // todo stop wrapping if unncessary
+        // console.log(
+        //     Object.keys(this.notesContent.on).map(_ => this.notesContent.on[_])
+        // );
+
+        const normalised = time2pitch.scaleBetween(20, 108).map(v => v + 20);
+
+        const newOn = {};
+        const newOff = {};
+
+        for (let i = 0; i < time2pitch.length; i++) {
+            this.notesContent.on[time2pitch[i]] = [normalised[i]];
+            newOn[time2pitch[i] - minT] = [normalised[i]];
+            newOff[time2pitch[i] - minT] = [timeToNoteoff[i] - minT];
+        }
+
+        this.notesContent.on = newOn;
+        this.notesContent.off = newOff;
+    }
+
+
+    addNotes({ startTick, pitchIndex, duration }) {
+        this.notesContent.on[startTick] = this.notesContent.on[startTick] || [];
+        this.notesContent.off[startTick] = this.notesContent.off[startTick] || [];
+
+        this.notesContent.on[startTick].push(pitchIndex);
+        this.notesContent.off[startTick].push(duration);
+
+        // Need a way to render a whole generation to preserve the polyphony created by branches?
+        this.playNote({
+            startTick, pitchIndex, duration
+        });
+    }
+
+    playNote(
+        { startTick, pitchIndex, duration }
+    ) {
+        console.info('Real Time PLAY NOTE: ', { startTick, pitchIndex, duration });
+    }
+
+
 
     /**
     @param {object} notes
@@ -68,8 +136,8 @@ export default class MIDI {
     @param {object} notes.off note off values
      */
     create(notes, scaleOfNoteLetters, durationScaleFactor) {
-        log.silly('create---------------->', JSON.stringify(notes, {}, '    '));
-        log.silly('durationScaleFactor', durationScaleFactor);
+        this.logger.silly('create---------------->', JSON.stringify(notes, {}, '    '));
+        this.logger.silly('durationScaleFactor', durationScaleFactor);
         let minVelocity = 50;
         let highestNote = 0;
         let lowestNote = 0;
@@ -82,17 +150,18 @@ export default class MIDI {
                 if (noteValue >= highestNote) highestNote = noteValue;
                 if (noteValue <= lowestNote) lowestNote = noteValue;
             });
-            if (notes.on[index].length > maxNotesInChord) maxNotesInChord = notes.on[index].length;
+            if (notes.on[index].length > maxNotesInChord) {
+                maxNotesInChord = notes.on[index].length;
+            }
         });
 
-        const noteScaleFactor = highestNote > 127 || lowestNote < 0 ? 127 / (highestNote - lowestNote) : 1;
-        log.silly('NOTE lo/hi/factor: ', lowestNote, highestNote, noteScaleFactor);
+        // notes.on.map( i =>
 
         const velocityScaleFactor = 127 / (127 - minVelocity);
-        log.silly('VELOCITY min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
+        this.logger.silly('VELOCITY min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
 
-        const pitchOffset = MIDI.pitchOffset(lowestNote, highestNote);
-        log.silly('PITCH OFFSET', pitchOffset);
+        const pitchOffset = 1; //  MIDI.pitchOffset(lowestNote, highestNote);
+        // this.logger.silly('PITCH OFFSET', pitchOffset);
 
         let timeOffset = Math.min(...Object.keys(notes.on));
         if (timeOffset < 0) {
@@ -100,7 +169,7 @@ export default class MIDI {
         } else {
             timeOffset = 0;
         }
-        log.silly('Time Offset', timeOffset);
+        this.logger.info('Time Offset', timeOffset);
 
         Object.keys(notes.on).forEach((startTimeIndex) => {
             const chordToPlay = {};
@@ -110,7 +179,7 @@ export default class MIDI {
                 const noteIndex = Math.abs(pitch) % scaleOfNoteLetters.length;
                 const note = scaleOfNoteLetters[noteIndex];
                 const octave = Math.round(Math.abs(pitch) / (127 / 8));
-                log.silly({ startTimeIndex, pitchOffset, pitch, noteIndex, note, octave, durationScaleFactor, timeOffset });
+                this.logger.silly({ startTimeIndex, pitchOffset, pitch, noteIndex, note, octave, durationScaleFactor, timeOffset });
 
                 const noteEvent = {
                     pitch: note + octave,
@@ -118,21 +187,21 @@ export default class MIDI {
                     velocity: Math.ceil((Object.keys(chordToPlay).length * velocityScaleFactor) + minVelocity),
                     startTick: Math.ceil((timeOffset + startTimeIndex) * durationScaleFactor)
                 };
-                log.silly(noteEvent);
+                this.logger.silly(noteEvent);
 
                 if (pitch <= 127) {
                     this.track.addEvent(new MidiWriter.NoteEvent(noteEvent));
                 } else {
-                    log.error('NOTE OUT OF BOUNDS:', JSON.stringify(noteEvent));
+                    this.logger.error('NOTE OUT OF BOUNDS > 127:', JSON.stringify(noteEvent));
                 }
             });
         });
 
-        log.log('Write', this.outputMidiPath);
+        this.logger.log('Write', this.outputMidiPath);
         const writer = new MidiWriter.Writer(this.track);
         const data = writer.buildFile();
         fs.writeFileSync(this.outputMidiPath, data);
-        log.log('Written');
+        this.logger.log('Written');
     }
 
 }
