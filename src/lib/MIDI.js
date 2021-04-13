@@ -21,6 +21,7 @@ import { Scale } from 'tonal';
 import MidiWriter from 'midi-writer-js';
 
 import Logger from './gui/Logger';
+import EventPlayNote from '@/lib/EventPlayNote.js';
 
 export default class MIDI {
     options = {};
@@ -126,8 +127,8 @@ export default class MIDI {
         { startTick, pitchIndex, duration }
     ) {
         console.info('Real Time PLAY NOTE: ', { startTick, pitchIndex, duration });
+        window.dispatchEvent(new EventPlayNote({ startTick, pitchIndex, duration }));
     }
-
 
 
     /**

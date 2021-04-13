@@ -19,6 +19,7 @@
 <script>
 import { Vue, Options } from "vue-class-component";
 import { Watch } from "vue-property-decorator";
+import { EVENT_NAME } from "@/lib/EventPlayNote.js";
 
 const NOTE_OFF = 0x80;
 const NOTE_ON = 0x90;
@@ -26,6 +27,8 @@ const NOTE_ON = 0x90;
 // function frequencyFromNoteNumber(note) {
 //   return 440 * Math.pow(2, (note - 69) / 12);
 // }
+
+const logArgs = (...args) => console.log("***** ", args);
 
 @Options({
   components: {},
@@ -38,6 +41,14 @@ export default class MidiController extends Vue {
   @Watch("connection")
   onConnection() {
     this.sendNote(60);
+  }
+
+  mounted() {
+    window.addEventListener(EVENT_NAME, logArgs);
+  }
+
+  unmounted() {
+    window.removeEventListener(EVENT_NAME, logArgs);
   }
 
   async created() {
