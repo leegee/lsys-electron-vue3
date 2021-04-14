@@ -27,6 +27,8 @@ rule p3
 
 */
 
+const vm = require('vm');
+
 export class BadRuleError extends Error { }
 export class BadVariableDefinitionError extends Error { }
 
@@ -37,6 +39,7 @@ export default class LsysParametric {
 	totalGenerations = null;
 	variables = null;
 	options = {};
+	vMcontext = {};
 
 	constructor(options = {}) {
 		if (!options.logger) {
@@ -250,7 +253,8 @@ export default class LsysParametric {
 
 						if (!ruleConditionMet) {
 							try {
-								ruleConditionMet = eval(ruleConditionJs);
+								// ruleConditionMet = eval(ruleConditionJs);
+								vm.runInContext(ruleConditionJs, this.vMcontext);
 							} catch (e) {
 								this.options.logger.warn(e);
 							}
