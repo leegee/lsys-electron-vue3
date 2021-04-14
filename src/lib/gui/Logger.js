@@ -1,13 +1,15 @@
 const log = require('electron-log');
 
 log.transports.file.level =
-    log.transports.console.level = process.env.LOG_LEVEL || 'error';
+    log.transports.console.level = process.env.LOG_LEVEL || 'silly';
 
-log.transports.console.level = process.env.LOG_LEVEL || false;
+log.transports.console.level = process.env.LOG_LEVEL || 'silly';
 
 // log.transports.console.level = false;
 
 log.transports.console.forceStyles = 1;
+log.path = log.transports.file.getFile().path;
+log.clear = () => log.transports.file.getFile().clear();
 
 process.stdout.write(
     '---------------------\n' +
@@ -16,12 +18,8 @@ process.stdout.write(
     'Set console log level: ' + log.transports.console.level + '\n' +
     '---------------------\n'
 )
-
-log.path = log.transports.file.getFile().path;
-
 process.stdout.write('\nLog file: ' + log.path + '\n');
 
-log.transports.file.getFile().clear();
 
 module.exports = log;
 

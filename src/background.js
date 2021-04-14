@@ -6,6 +6,9 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 import "./electron/menu";
 
+// import logger from "./lib/gui/Logger";
+// logger.clear();
+
 let win;
 
 const isDevelopment = process.env.NODE_ENV !== 'production'

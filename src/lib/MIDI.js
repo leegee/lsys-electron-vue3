@@ -103,29 +103,34 @@ export default class MIDI {
         for (let i = 0; i < time2pitch.length; i++) {
             const t = time2pitch[i] - minT;
 
-            newOn[t] = [normalisedPitches[i]];
-            newOff[t] = [timeToNoteoff[i] - minT];
+            newOn[t] = [
+                Number(normalisedPitches[i])
+            ];
+            newOff[t] = [timeToNoteoff[i] - minT + 1];
         }
 
         this.notesContent.on = newOn;
         this.notesContent.off = newOff;
 
-        console.log('Normalised notes', this.notesContent.on);
+        this.logger.log('Normalised notes', this.notesContent.on);
     }
 
 
     addNotes({ startTick, pitchIndex, duration }) {
+        startTick = Number(startTick);
+        pitchIndex = Number(pitchIndex);
+
         this.notesContent.on[startTick] = this.notesContent.on[startTick] || [];
         this.notesContent.off[startTick] = this.notesContent.off[startTick] || [];
 
-        console.log('add ', pitchIndex);
+        this.logger.log('MIDI.addNote: ', pitchIndex, 'dur', duration);
 
         this.notesContent.on[startTick].push(pitchIndex);
         this.notesContent.off[startTick].push(duration);
     }
 
     addNotesFromGraph({ x, y }) {
-        console.log({ x, y });
+        this.logger.log({ x, y });
 
         this.notesContent.on[x] = this.notesContent.on[x] || [];
         this.notesContent.off[x] = this.notesContent.off[x] || [];
@@ -147,7 +152,13 @@ export default class MIDI {
     @param {object} notes.off note off values
      */
     create(notes, scaleOfNoteLetters, durationScaleFactor) {
-        this.logger.silly('create---------------->', JSON.stringify(notes, {}, '    '));
+
+        this.logger.silly('MIDI.create---------------->', JSON.stringify(notes, {}, '    '));
+
+        if (!notes) {
+            throw new Error('No notes supplied to MIDI.create');
+        }
+
         this.logger.silly('durationScaleFactor', durationScaleFactor);
         let minVelocity = 50;
         let highestNote = 0;
@@ -155,6 +166,8 @@ export default class MIDI {
         let maxNotesInChord = 0;
 
         this.track = new MidiWriter.Track();
+
+        this.logger.silly('xxxx', notes.on);
 
         Object.keys(notes.on).forEach(index => {
             notes.on[index].forEach(noteValue => {
@@ -167,10 +180,10 @@ export default class MIDI {
         });
 
         const velocityScaleFactor = 127 / (127 - minVelocity);
-        this.logger.silly('VELOCITY min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
+        this.logger.info('Velocity min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
 
         const pitchOffset = 1; //  MIDI.pitchOffset(lowestNote, highestNote);
-        // this.logger.silly('PITCH OFFSET', pitchOffset);
+        this.logger.info('Pitch offset', pitchOffset);
 
         let timeOffset = Math.min(...Object.keys(notes.on));
         if (timeOffset < 0) {

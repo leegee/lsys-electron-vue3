@@ -77,6 +77,10 @@ const LsysRenderer = class LsysRenderer {
         this.y = Number(this.settings.initY);
     }
 
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     render(content, midiRenderer) {
         midiRenderer.newRender();
         this._render({ content, draw: false, midiRenderer });
@@ -90,9 +94,6 @@ const LsysRenderer = class LsysRenderer {
         }
     }
 
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 
     _render({ content, draw, midiRenderer }) {
         this.logger.info('RENDER: draw:%s, midiRenderer:%s', draw, midiRenderer ? true : false);
@@ -106,7 +107,7 @@ const LsysRenderer = class LsysRenderer {
             this.penUp = false;
             const atom = content.charAt(i).toLowerCase();
 
-            this.logger.silly('Do content atom %d, (%s)', i, atom);
+            this.logger.silly('Do content atom #%d `%s`', i, atom);
 
             switch (atom) {
                 case 'f': // Forwards
@@ -143,19 +144,17 @@ const LsysRenderer = class LsysRenderer {
                     break;
             }
 
-            this.logger.debug('SET DIR', dir);
             if (draw) {
                 this._turtleGraph(dir, midiRenderer);
             }
         }
     }
 
-
     _turtleGraph(dir, midiRenderer) {
         this.ctx.beginPath();
         this.ctx.lineWidth = this.settings.lineWidth;
 
-        this.logger.debug('Move dir (%s) from x (%s) y (%s)', dir, this.x, this.y);
+        this.logger.debug('MOVE dir (%s) from x (%s) y (%s)', dir, this.x, this.y);
         this.ctx.moveTo(this.x, this.y);
 
         this.x += (LsysRenderer.dcos(dir) * this.settings.turtleStepX);
@@ -164,7 +163,7 @@ const LsysRenderer = class LsysRenderer {
         if (!this.penUp) {
             const x = Math.round(this.x);
             const y = Math.round(this.y);
-            this.logger.debug('DRAW LINE TO ', x, y);
+            this.logger.debug('DRAW to ', x, y);
 
             this.ctx.lineTo(x, y);
             this.ctx.closePath();
@@ -172,8 +171,8 @@ const LsysRenderer = class LsysRenderer {
 
             midiRenderer.addNotes({
                 startTick: this.x,
+                pitchIndex: this.y,
                 duration: 1,
-                pitchIndex: this.y
             });
 
             // midiRenderer.addNotesFromGraph({
@@ -186,8 +185,6 @@ const LsysRenderer = class LsysRenderer {
         if (this.x > this.maxX) { this.maxX = this.x; }
         if (this.y < this.minY) { this.minY = this.y; }
         if (this.y > this.maxY) { this.maxY = this.y; }
-
-        this.logger.silly('Moved to x (%s) y (%s)', this.x, this.y);
     }
 
     _setWidth(px) {

@@ -49,7 +49,16 @@ const template = [
 
   {
     label: "Re&generate",
-    click: () => BrowserWindow.getFocusedWindow().webContents.send('generate')
+    submenu: [
+      {
+        label: "&All",
+        click: () => BrowserWindow.getFocusedWindow().webContents.send('generate-all')
+      },
+      {
+        label: "&MIDI",
+        click: () => BrowserWindow.getFocusedWindow().webContents.send('generate-midi')
+      },
+    ]
   },
 
   {

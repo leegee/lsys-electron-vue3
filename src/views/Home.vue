@@ -50,20 +50,12 @@
             </label>
           </p>
         </fieldset>
-
-        <input
-          id="actionGenerate"
-          type="button"
-          value="Regenerate Image &amp; MIDI"
-          @click="actionGenerate"
-        />
-        <!-- <input type="button" id="actionCreateMidi" value="🎼Regenerate MIDI" /> -->
       </div>
 
       <div class="column">
         <fieldset>
           <legend>MIDI</legend>
-          <p>
+          <!-- <p>
             <label
               >Allow notes to be placed back in the past?
               <input
@@ -72,7 +64,7 @@
                 type="checkbox"
               />
             </label>
-          </p>
+          </p> -->
 
           <p>
             <label
@@ -82,7 +74,22 @@
                 v-model="settings.duration"
                 type="range"
                 min="1"
-                max="250"
+                max="50"
+                step="0.5"
+              />
+            </label>
+
+            <label
+              >Wrap Angle
+              <input
+                disabled
+                id="wrapAtAngle"
+                v-model="settings.wrapAtAngle"
+                type="range"
+                min="0"
+                max="360"
+                aria-valuemin="0"
+                aria-valuemax="360"
               />
             </label>
 
@@ -105,20 +112,7 @@
             </label>
           </p>
 
-          <p>
-            <label
-              >Wrap Angle
-              <input
-                id="wrapAtAngle"
-                v-model="settings.wrapAtAngle"
-                type="range"
-                min="0"
-                max="360"
-                aria-valuemin="0"
-                aria-valuemax="360"
-              />
-            </label>
-          </p>
+          <div id="player" />
         </fieldset>
 
         <fieldset>
@@ -126,9 +120,7 @@
           <textarea id="contentDisplay" v-model="settings.contentDisplay" />
         </fieldset>
 
-        <div id="player" />
-
-        <MidiController />
+        <!-- <MidiController /> -->
       </div>
     </form>
 
@@ -167,8 +159,12 @@ export default class Home extends Vue {
       this.loadPreset(presetIndex);
     });
 
-    ipcRenderer.on("generate", () => {
-      this.actionGenerate();
+    ipcRenderer.on("generate-all", () => {
+      this.generateAll();
+    });
+
+    ipcRenderer.on("generate-midi", () => {
+      this.generateMidi();
     });
 
     ipcRenderer.on("clear-canvases", () => {
@@ -201,11 +197,21 @@ export default class Home extends Vue {
       ...Presets[idx],
     };
 
-    this.actionGenerate();
+    this.generateAll();
   }
 
-  actionGenerate() {
-    this.logger.debug("Enter actionGenerate");
+  generateMidi() {
+    this.logger.silly("Enter actionCreateMidi");
+    this.midi.playFile(
+      this.midi.notesContent,
+      this.settings.scale,
+      this.settings.duration
+    );
+    this.logger.silly("Leave actionCreateMidi");
+  }
+
+  generateAll() {
+    this.logger.debug("Enter generateAll");
     this.working = true;
     const canvas = window.document.createElement("canvas");
     this.$refs.canvases.insertBefore(canvas, this.$refs.canvases.firstChild);
@@ -230,13 +236,14 @@ export default class Home extends Vue {
     this.lsysRenderer.render(lsys.content, this.midi || undefined);
     this.lsysRenderer.finalise();
 
-    this.logger.silly("create midi");
-    this.midi.playFile(
-      this.midi.notesContent,
-      this.settings.scale,
-      this.settings.duration
-    );
-    this.logger.silly("done create midi");
+    this.generateMidi();
+    // this.logger.silly("create midi");
+    // this.midi.playFile(
+    //   this.midi.notesContent,
+    //   this.settings.scale,
+    //   this.settings.duration
+    // );
+    // this.logger.silly("done create midi");
 
     canvas.addEventListener("click", (e) => {
       e.preventDefault();
@@ -277,7 +284,7 @@ section.working {
 input[type="text"] {
   margin-left: 0.3em;
 }
-#actionGenerate {
+#generateAll {
   float: right;
   border: 0.5rem solid rgb(136, 136, 136);
   padding: 0.3rem;

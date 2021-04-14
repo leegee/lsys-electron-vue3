@@ -1,5 +1,25 @@
 export default [
     {
+        title: 'Dev',
+        totalGenerations: 1,
+        variables: '',
+        start: 'X',
+        initX: 0,
+        initY: 0,
+        rules: 'X -> C1F[C3+X]F[C3-X]+X\nF->C4FF',
+        angle: 40,
+        canvasWidth: 1000,
+        canvasHeight: 760,
+        turtleStepX: 10,
+        turtleStepY: 10,
+        wrapAtAngle: 0,
+        lineWidth: 8,
+        initially: function () {
+            this.ctx.rotate(180 * Math.PI / 180);
+        }
+    },
+
+    {
         title: 'Weed',
         totalGenerations: 2,
         variables: '',
