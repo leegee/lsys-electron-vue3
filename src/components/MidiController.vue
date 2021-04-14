@@ -28,7 +28,7 @@ const NOTE_ON = 0x90;
 //   return 440 * Math.pow(2, (note - 69) / 12);
 // }
 
-const logArgs = (...args) => console.log("***** ", args);
+const logArgs = () => {};
 
 @Options({
   components: {},
@@ -62,6 +62,7 @@ export default class MidiController extends Vue {
     }
 
     this.midiAccess = await navigator.requestMIDIAccess();
+
     this.midiAccess.onstatechange = (e) => {
       console.warn(e, e.port.name, e.port.state);
       if (e instanceof MIDIConnectionEvent) {
@@ -70,9 +71,10 @@ export default class MidiController extends Vue {
     };
 
     const outputDevicesList = {};
-    this.midiAccess.outputs.forEach(
-      (device) => (outputDevicesList[device.id] = device)
-    );
+    this.midiAccess.outputs.forEach((device) => {
+      outputDevicesList[device.id] = device;
+      console.info("Device", device);
+    });
     this.$store.commit("setOutputDevicesList", outputDevicesList);
 
     const firstListedDevice = this.$store.state.outputDevicesList[

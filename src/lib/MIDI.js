@@ -23,6 +23,12 @@ import MidiWriter from 'midi-writer-js';
 import Logger from './gui/Logger';
 import EventPlayNote from '@/lib/EventPlayNote.js';
 
+Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
+    const max = Math.max.apply(Math, this);
+    const min = Math.min.apply(Math, this);
+    return this.map(num => (scaledMax - scaledMin) * (num - min) / (max - min) + scaledMin);
+}
+
 export default class MIDI {
     options = {};
     outputs = [];
@@ -58,7 +64,7 @@ export default class MIDI {
 
     playFile(notes, scaleName, duration) {
         const scaleOfNoteLetters = Scale.notes('A ' + scaleName);
-        this.logger.info('SCALE NOTES: ', scaleOfNoteLetters);
+        this.logger.info('SCALE NOTES: ', ...scaleOfNoteLetters);
 
         this.create(notes, scaleOfNoteLetters, duration);
 
@@ -89,24 +95,22 @@ export default class MIDI {
         const timeToNoteoff = Object.keys(this.notesContent.off);
         const minT = Math.min(...time2pitch);
 
-        // todo stop wrapping if unncessary
-        // console.log(
-        //     Object.keys(this.notesContent.on).map(_ => this.notesContent.on[_])
-        // );
-
-        const normalised = time2pitch.scaleBetween(20, 108).map(v => v + 20);
+        const normalisedPitches = time2pitch; // .scaleBetween(1, 127); // .map(v => v + 12);
 
         const newOn = {};
         const newOff = {};
 
         for (let i = 0; i < time2pitch.length; i++) {
-            this.notesContent.on[time2pitch[i]] = [normalised[i]];
-            newOn[time2pitch[i] - minT] = [normalised[i]];
-            newOff[time2pitch[i] - minT] = [timeToNoteoff[i] - minT];
+            const t = time2pitch[i] - minT;
+
+            newOn[t] = [normalisedPitches[i]];
+            newOff[t] = [timeToNoteoff[i] - minT];
         }
 
         this.notesContent.on = newOn;
         this.notesContent.off = newOff;
+
+        console.log('Normalised notes', this.notesContent.on);
     }
 
 
@@ -114,19 +118,25 @@ export default class MIDI {
         this.notesContent.on[startTick] = this.notesContent.on[startTick] || [];
         this.notesContent.off[startTick] = this.notesContent.off[startTick] || [];
 
+        console.log('add ', pitchIndex);
+
         this.notesContent.on[startTick].push(pitchIndex);
         this.notesContent.off[startTick].push(duration);
+    }
 
-        // Need a way to render a whole generation to preserve the polyphony created by branches?
-        this.playNote({
-            startTick, pitchIndex, duration
-        });
+    addNotesFromGraph({ x, y }) {
+        console.log({ x, y });
+
+        this.notesContent.on[x] = this.notesContent.on[x] || [];
+        this.notesContent.off[x] = this.notesContent.off[x] || [];
+
+        this.notesContent.on[x].push(y);
+        this.notesContent.off[x].push(1);
     }
 
     playNote(
         { startTick, pitchIndex, duration }
     ) {
-        console.info('Real Time PLAY NOTE: ', { startTick, pitchIndex, duration });
         window.dispatchEvent(new EventPlayNote({ startTick, pitchIndex, duration }));
     }
 
@@ -155,8 +165,6 @@ export default class MIDI {
                 maxNotesInChord = notes.on[index].length;
             }
         });
-
-        // notes.on.map( i =>
 
         const velocityScaleFactor = 127 / (127 - minVelocity);
         this.logger.silly('VELOCITY min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);

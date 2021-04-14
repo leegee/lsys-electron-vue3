@@ -127,6 +127,8 @@
         </fieldset>
 
         <div id="player" />
+
+        <MidiController />
       </div>
     </form>
 
@@ -144,9 +146,12 @@ import { scale as tonalScales } from "tonal";
 import Logger from "@/lib/gui/Logger";
 import LsysParametric from "@/lib/LsysParametric";
 import LsysRenderer from "@/lib/gui/LsysRenderer";
+import MidiController from "@/components/MidiController";
 
 @Options({
-  components: {},
+  components: {
+    MidiController,
+  },
 })
 export default class Home extends Vue {
   midi = null;
@@ -160,6 +165,10 @@ export default class Home extends Vue {
   mounted() {
     ipcRenderer.on("load-preset", (_event, presetIndex) => {
       this.loadPreset(presetIndex);
+    });
+
+    ipcRenderer.on("generate", () => {
+      this.actionGenerate();
     });
 
     ipcRenderer.on("clear-canvases", () => {

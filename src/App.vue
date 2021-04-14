@@ -1,10 +1,5 @@
 <template>
   <main>
-    <CustomMenuBar />
-    <!-- <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div> -->
     <router-view />
   </main>
 </template>
@@ -25,13 +20,10 @@ main {
 
 <script>
 import { Vue, Options } from "vue-class-component";
-import CustomMenuBar from "@/components/CustomMenuBar";
 
 import "./css-vars.css";
 
-@Options({
-  components: { CustomMenuBar },
-})
+@Options({})
 export default class App extends Vue {
   async created() {}
 }

@@ -18,7 +18,7 @@
     "@babel/plugin-transform-classes": "^7.13.0",
     "core-js": "^3.6.5",
     "electron": "^11.0.0",
-    "electron-log": "^4.3.2",
+    "electron-log": "^4.3.4",
     "jazz-midi-electron": "^1.1.6",
     "jzz-gui-player": "^1.4.7",
     "jzz-midi-smf": "^1.4.9",

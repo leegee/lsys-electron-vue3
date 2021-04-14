@@ -2,21 +2,22 @@
   <section>
     <nav id="menu-bar">
       <header class="left" role="menu">
-        <button @click="openMenu($event.x, $event.y)">
+        <button id="burger" @click="openMenu($event.x, $event.y)">
           <i class="fas fa-bars"></i>
         </button>
 
         <MidiController />
+
+        <button id="actionGenerate" @click="actionGenerate">
+          Regenerate Image &amp; MIDI
+        </button>
       </header>
 
       <aside class="right">
-        <button @click="minimizeWindow">
+        <button class="winCtrl" @click="minimizeWindow">
           <i class="fas fa-window-minimize"></i>
         </button>
-        <button @click="maxUnmax" ref="maxUnmaxButton">
-          <i class="far fa-square"></i>
-        </button>
-        <button id="close-btn" @click="closeWindow">
+        <button id="close-btn" class="winCtrl" @click="closeWindow">
           <i class="fas fa-times"></i>
         </button>
       </aside>
@@ -45,10 +46,11 @@
   align-items: center;
 }
 
-#menu-bar button {
+#burger,
+.winCtrl {
   -webkit-app-region: no-drag;
   height: 100%;
-  padding: 0 15px;
+  padding-left: 1rem;
   border: none;
   background: transparent;
   outline: none;
@@ -59,7 +61,7 @@
 }
 
 #close-btn:hover {
-  background: rgb(255, 0, 0);
+  background: red;
 }
 
 #menu-bar button i {
@@ -70,6 +72,12 @@
   width: 10em;
   background-color: var(--app-fg-dim);
   color: var(--app-bg);
+}
+
+#actionGenerate {
+  display: inline-block;
+  background-color: var(--app-fg-dim);
+  margin: 0 1rem;
 }
 </style>
 
@@ -86,19 +94,6 @@ import MidiController from "@/components/MidiController";
 export default class CustomMenuBar extends Vue {
   outputDevice = null;
 
-  async maxUnmax() {
-    const isMaximized = await ipcRenderer.invoke("max-unmax-window");
-    const icon = this.$refs.maxUnmaxButton.querySelector("i.far");
-
-    if (isMaximized) {
-      icon.classList.add("fa-square");
-      icon.classList.remove("fa-clone");
-    } else {
-      icon.classList.remove("fa-square");
-      icon.classList.add("fa-clone");
-    }
-  }
-
   openMenu(x, y) {
     ipcRenderer.send(`display-app-menu`, { x, y });
   }
@@ -107,16 +102,15 @@ export default class CustomMenuBar extends Vue {
     ipcRenderer.send("minimize");
   }
 
-  maximizeWindow() {
-    ipcRenderer.send("maximize");
-  }
-
-  unmaximizeWindow() {
-    ipcRenderer.send("unmaximize");
-  }
-
   closeWindow() {
     ipcRenderer.send("close");
+  }
+
+  actionGenerate() {
+    console.log("** action generate");
+    // import { BrowserWindow, Menu } from 'electron';
+    // BrowserWindow.getFocusedWindow().webContents.send('action-generate', index);
+    ipcRenderer.send("action-generate");
   }
 }
 </script>

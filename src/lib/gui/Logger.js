@@ -1,51 +1,37 @@
-// const fs = require('fs');
-// const log = require('electron-log');
+const log = require('electron-log');
 
-// log.transports.file.level =
-//     log.transports.console.level = process.env.LOG_LEVEL || 'error';
+log.transports.file.level =
+    log.transports.console.level = process.env.LOG_LEVEL || 'error';
 
-// log.transports.console.level = process.env.LOG_LEVEL || false;
+log.transports.console.level = process.env.LOG_LEVEL || false;
 
-// log.transports.console.level = false;
+log.transports.console.level = false;
 
-// log.transports.console.forceStyles = 1;
+log.transports.console.forceStyles = 1;
 
-// process.stdout.write(
-//     '---------------------\n' +
-//     'env.LOG_LEVEL: ' + (process.env.LOG_LEVEL || '') + '\n' +
-//     'Set file log level: ' + log.transports.file.level + '\n' +
-//     'Set console log level: ' + log.transports.console.level + '\n' +
-//     '---------------------\n'
-// )
+process.stdout.write(
+    '---------------------\n' +
+    'env.LOG_LEVEL: ' + (process.env.LOG_LEVEL || '') + '\n' +
+    'Set file log level: ' + log.transports.file.level + '\n' +
+    'Set console log level: ' + log.transports.console.level + '\n' +
+    '---------------------\n'
+)
 
-// log.findLogPath = log.transports.file.findLogPath;
+log.path = log.transports.file.getFile().path;
 
-// const logPath = log.findLogPath();
+process.stdout.write('\nLog file: ' + log.path + '\n');
 
-// process.stdout.write('\nLog file: ' + logPath + '\n');
+log.transports.file.getFile().clear();
 
-// log.transports.file.clear = () => {
-//     if (fs.existsSync(logPath)) {
-//         try {
-//             fs.unlinkSync(logPath);
-//             process.stdout.write('Cleared log\n');
-//         } catch (e) {
-//             process.stderr.write('Could not clear log! ' + e.name + ': ' + e.message + '\n');
-//         }
-//     }
+module.exports = log;
+
+// module.exports = {
+//     // ...console,
+//     silly: () => { },
+//     verbose: () => { },
+//     debug: () => { },
+//     log: () => { },
+//     info: () => console.info,
+//     warn: () => console.warn,
+//     error: () => console.error,
 // };
-
-// log.transports.file.clear();
-
-// // module.exports = log;
-
-module.exports = {
-    // ...console,
-    silly: () => { },
-    verbose: () => { },
-    debug: () => { },
-    log: () => { },
-    info: () => console.info,
-    warn: () => console.warn,
-    error: () => console.error,
-};

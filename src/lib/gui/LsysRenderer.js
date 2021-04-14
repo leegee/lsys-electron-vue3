@@ -1,11 +1,5 @@
 const DEGREE_TO_RADIAN_FACTOR = Math.PI / 180.0;
 
-Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
-    const max = Math.max.apply(Math, this);
-    const min = Math.min.apply(Math, this);
-    return this.map(num => (scaledMax - scaledMin) * (num - min) / (max - min) + scaledMin);
-}
-
 const LsysRenderer = class LsysRenderer {
     preparedColours = [];
     settings = null;
@@ -13,7 +7,6 @@ const LsysRenderer = class LsysRenderer {
     ctx = null;
     x = null;
     y = null;
-    stepped = null;
 
     static dsin(degrees) {
         return Math.sin(degrees * DEGREE_TO_RADIAN_FACTOR)
@@ -93,18 +86,17 @@ const LsysRenderer = class LsysRenderer {
         this._render({ content, draw: true, midiRenderer });
 
         if (midiRenderer) {
-            this.logger.info('x'.repeat(40));
-            this.logger.info(content);
-            this.logger.info('x'.repeat(40));
+            midiRenderer.afterFinalRender();
         }
+    }
 
-        midiRenderer.afterFinalRender();
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     _render({ content, draw, midiRenderer }) {
         this.logger.info('RENDER: draw:%s, midiRenderer:%s', draw, midiRenderer ? true : false);
         const states = [];
-        this.stepped = 0;
         this.punUp = false;
         let dir = 0;
 
@@ -119,6 +111,7 @@ const LsysRenderer = class LsysRenderer {
             switch (atom) {
                 case 'f': // Forwards
                     break;
+
                 case 'c': // Set colour
                     const colourCode = content.charAt(++i);
                     const index = parseInt(colourCode, 10) % this.settings.colours.length;
@@ -126,58 +119,41 @@ const LsysRenderer = class LsysRenderer {
                     this._setColour(index);
                     draw = false;
                     break;
+
                 case '+': // Right
                     dir += Number(this.settings.angle);
                     break;
+
                 case '-': // Left
                     dir -= Number(this.settings.angle);
                     break;
+
                 case '[': // Start a branch
-                    states.push([dir, this.x, this.y, this.colour, this.stepped]);
+                    states.push([dir, this.x, this.y, this.colour]);
                     draw = false;
                     break;
-                // End a branch
-                case ']':
+
+                case ']': // End a branch
                     const state = states.pop();
                     dir = state[0];
                     this.x = state[1];
                     this.y = state[2];
                     this.colour = state[3];
-                    this.stepped = state[4];
                     draw = true;
                     break;
             }
 
             this.logger.debug('SET DIR', dir);
-            this._turtleGraph(dir);
-
-            if (!this.penUp) {
-                midiRenderer.addNotes({
-                    startTick: this.x,
-                    duration: 1,
-                    pitchIndex: this.y
-                });
-            }
-
             if (draw) {
-                this.stepped++;
+                this._turtleGraph(dir, midiRenderer);
             }
         }
     }
 
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 
-    _turtleGraph(dir) {
+    _turtleGraph(dir, midiRenderer) {
         this.ctx.beginPath();
-
-        // if (this.settings.generationsScaleLines > 0) {
-        // this.ctx.lineWidth = this.settings.lineWidth; // * (totalGenerations - currentGenerationNumber);
-        // }
-        // else if (this.settings.lineWidth) {
         this.ctx.lineWidth = this.settings.lineWidth;
-        // }
 
         this.logger.debug('Move dir (%s) from x (%s) y (%s)', dir, this.x, this.y);
         this.ctx.moveTo(this.x, this.y);
@@ -193,6 +169,17 @@ const LsysRenderer = class LsysRenderer {
             this.ctx.lineTo(x, y);
             this.ctx.closePath();
             this.ctx.stroke();
+
+            midiRenderer.addNotes({
+                startTick: this.x,
+                duration: 1,
+                pitchIndex: this.y
+            });
+
+            // midiRenderer.addNotesFromGraph({
+            //     x: this.x,
+            //     y: this.y
+            // });
         }
 
         if (this.x < this.minX) { this.minX = this.x; }
@@ -227,10 +214,10 @@ const LsysRenderer = class LsysRenderer {
     resizeCanvas() {
         this.logger.debug('Resize Min: %d , %d\nMax: %d , %d', this.minX, this.minY, this.maxX, this.maxY);
 
-        if (this.maxY <= 0) {
+        if (this.maxY < 0) {
             throw new RangeError('maxY out of bounds: ' + this.maxY);
         }
-        if (this.maxX <= 0) {
+        if (this.maxX < 0) {
             throw new RangeError('maxX out of bounds: ' + this.maxX);
         }
 
@@ -238,8 +225,6 @@ const LsysRenderer = class LsysRenderer {
         const hi = (this.minY < 0) ? Math.abs(this.minY) + Math.abs(this.maxY) : this.maxY - this.minY;
 
         this._setUpCanvas();
-
-        // this.y -= this.minY;
 
         const sx = this.settings.canvasWidth / wi;
         const sy = this.settings.canvasHeight / hi;

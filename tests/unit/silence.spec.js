@@ -25,7 +25,7 @@ HTMLCanvasElement.prototype.getContext = () => {
 describe('Inverted angles', () => {
   it('removes silence at the start', () => {
     const midi = new Midi({
-      outputMidiPath: 'outupt.test.mid',
+      outputMidiPath: 'output.test.mid',
       window,
     });
 

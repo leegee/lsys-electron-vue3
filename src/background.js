@@ -6,8 +6,6 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 import "./electron/menu";
 
-import { menu, addMenuHandlers } from '@/electron/menu';
-
 let win;
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -18,11 +16,10 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 async function createWindow() {
-  // Create the browser window.
   win = new BrowserWindow({
     width: 1000,
     height: 1000,
-    frame: false,
+    // frame: false,
     webPreferences: {
       contextIsolation: false,
 
@@ -72,7 +69,6 @@ app.on('ready', async () => {
     }
   }
   createWindow();
-  addMenuHandlers(ipcMain, win);
 })
 
 // Exit cleanly on request from parent process in development mode.
