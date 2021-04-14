@@ -15,10 +15,11 @@ const template = [
       {
         label: "&Load Preset",
         submenu: Presets.map((preset, index) => {
+          const acc = index < 9;
           return {
             type: "radio",
-            label: index + 1 + " " + preset.title,
-            accelerator: index <= 10 ? index + 1 : undefined,
+            label: (acc ? "&" : "") + (index + 1) + " " + preset.title,
+            accelerator: acc ? index + 1 : undefined,
             click: (e) => {
               e.checked = true;
               BrowserWindow.getFocusedWindow().webContents.send('load-preset', index);

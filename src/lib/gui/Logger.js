@@ -5,7 +5,7 @@ log.transports.file.level =
 
 log.transports.console.level = process.env.LOG_LEVEL || false;
 
-log.transports.console.level = false;
+// log.transports.console.level = false;
 
 log.transports.console.forceStyles = 1;
 
