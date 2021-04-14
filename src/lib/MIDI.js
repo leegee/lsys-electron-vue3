@@ -182,7 +182,7 @@ export default class MIDI {
         const velocityScaleFactor = 127 / (127 - minVelocity);
         this.logger.info('Velocity min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
 
-        const pitchOffset = 1; //  MIDI.pitchOffset(lowestNote, highestNote);
+        const pitchOffset = MIDI.pitchOffset(lowestNote, highestNote);
         this.logger.info('Pitch offset', pitchOffset);
 
         let timeOffset = Math.min(...Object.keys(notes.on));
