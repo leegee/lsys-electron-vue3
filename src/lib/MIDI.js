@@ -29,6 +29,23 @@ Array.prototype.scaleBetween = function (scaledMin, scaledMax) {
     return this.map(num => (scaledMax - scaledMin) * (num - min) / (max - min) + scaledMin);
 }
 
+function findNoteRanges(notes) {
+    let highestNote = 0;
+    let lowestNote = 0;
+    let maxNotesInChord = 0;
+
+    Object.keys(notes.on).forEach(index => {
+        notes.on[index].forEach(noteValue => {
+            if (noteValue >= highestNote) highestNote = noteValue;
+            if (noteValue <= lowestNote) lowestNote = noteValue;
+        });
+        if (notes.on[index].length > maxNotesInChord) {
+            maxNotesInChord = notes.on[index].length;
+        }
+    });
+    return [lowestNote, highestNote, maxNotesInChord];
+}
+
 export default class MIDI {
     options = {};
     outputs = [];
@@ -50,6 +67,7 @@ export default class MIDI {
     constructor(options = {}) {
         JZZ.synth.Tiny.register('Web Audio');
         JZZ.synth.OSC.register('OSC');
+
         this.player = new JZZ.gui.Player({
             at: 'player',
             ports: ['OSC', 'Web Audio']
@@ -62,9 +80,9 @@ export default class MIDI {
         this.port = JZZ().openMidiOut().or(() => alert('Cannot open output MIDI port.'));
     }
 
-    playFile(notes, scaleName, duration) {
+    createMidiFile(notes, scaleName, duration) {
         const scaleOfNoteLetters = Scale.notes('A ' + scaleName);
-        this.logger.info('SCALE NOTES: ', ...scaleOfNoteLetters);
+        this.logger.info('MIDI.createMidiFile: scale notes: ', ...scaleOfNoteLetters);
 
         this.create(notes, scaleOfNoteLetters, duration);
 
@@ -73,11 +91,12 @@ export default class MIDI {
         }
 
         const data = fs.readFileSync(this.outputMidiPath, 'binary');
+
         try {
-            const smf = new JZZ.MIDI.SMF(data);
             this.player.stop();
-            this.player.load(smf);
-            this.player.play();
+            this.player.load(new JZZ.MIDI.SMF(data));
+            // this.player.play();
+
         } catch (e) {
             this.logger.error(e);
         }
@@ -88,6 +107,31 @@ export default class MIDI {
             on: {},
             off: {}
         };
+    }
+
+    OLD_afterFinalRender() {
+        const time2pitch = Object.keys(this.notesContent.on);
+        const timeToNoteoff = Object.keys(this.notesContent.off);
+        const minT = Math.min(...time2pitch);
+
+        const normalisedPitches = time2pitch; // .scaleBetween(1, 127); // .map(v => v + 12);
+
+        const newOn = {};
+        const newOff = {};
+
+        for (let i = 0; i < time2pitch.length; i++) {
+            const t = time2pitch[i] - minT;
+
+            newOn[t] = [
+                Number(normalisedPitches[i])
+            ];
+            newOff[t] = [timeToNoteoff[i] - minT + 1];
+        }
+
+        this.notesContent.on = newOn;
+        this.notesContent.off = newOff;
+
+        this.logger.log('Normalised notes', this.notesContent.on);
     }
 
     afterFinalRender() {
@@ -161,23 +205,12 @@ export default class MIDI {
 
         this.logger.silly('durationScaleFactor', durationScaleFactor);
         let minVelocity = 50;
-        let highestNote = 0;
-        let lowestNote = 0;
-        let maxNotesInChord = 0;
 
         this.track = new MidiWriter.Track();
 
         this.logger.silly('xxxx', notes.on);
 
-        Object.keys(notes.on).forEach(index => {
-            notes.on[index].forEach(noteValue => {
-                if (noteValue >= highestNote) highestNote = noteValue;
-                if (noteValue <= lowestNote) lowestNote = noteValue;
-            });
-            if (notes.on[index].length > maxNotesInChord) {
-                maxNotesInChord = notes.on[index].length;
-            }
-        });
+        const [lowestNote, highestNote, maxNotesInChord] = findNoteRanges(notes);
 
         const velocityScaleFactor = 127 / (127 - minVelocity);
         this.logger.info('Velocity min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
@@ -201,19 +234,20 @@ export default class MIDI {
                 const noteIndex = Math.abs(pitch) % scaleOfNoteLetters.length;
                 const note = scaleOfNoteLetters[noteIndex];
                 const octave = Math.round(Math.abs(pitch) / (127 / 8));
-                this.logger.silly({ startTimeIndex, pitchOffset, pitch, noteIndex, note, octave, durationScaleFactor, timeOffset });
+                // this.logger.silly({ startTimeIndex, pitchOffset, pitch, noteIndex, note, octave, durationScaleFactor, timeOffset });
 
                 const noteEvent = {
                     pitch: note + octave,
                     duration: 'T' + Math.ceil((notes.off[startTimeIndex][0] + timeOffset) * durationScaleFactor),
+                    startTick: Math.ceil((timeOffset + startTimeIndex) * durationScaleFactor),
                     velocity: Math.ceil((Object.keys(chordToPlay).length * velocityScaleFactor) + minVelocity),
-                    startTick: Math.ceil((timeOffset + startTimeIndex) * durationScaleFactor)
                 };
-                this.logger.silly(noteEvent);
 
                 if (pitch <= 127) {
+                    this.logger.silly(noteEvent);
                     this.track.addEvent(new MidiWriter.NoteEvent(noteEvent));
-                } else {
+                }
+                else {
                     this.logger.error('NOTE OUT OF BOUNDS > 127:', JSON.stringify(noteEvent));
                 }
             });

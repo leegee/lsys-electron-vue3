@@ -391,7 +391,7 @@ export default class GUI {
 
     actionCreateMidi() {
         this.logger.silly('Enter actionCreateMidi');
-        this.midi.playFile(
+        this.midi.createMidiFile(
             this.lsysRenderer.notesContent,
             this.settings.scale,
             this.settings.duration

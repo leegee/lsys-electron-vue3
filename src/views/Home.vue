@@ -167,6 +167,18 @@ export default class Home extends Vue {
       this.generateMidi();
     });
 
+    ipcRenderer.on("midi-play", () => {
+      this.midi.player.play();
+    });
+
+    ipcRenderer.on("midi-pause", () => {
+      this.midi.player.pause();
+    });
+
+    ipcRenderer.on("midi-stop", () => {
+      this.midi.player.stop();
+    });
+
     ipcRenderer.on("clear-canvases", () => {
       this.$refs.canvases.innerHTML = "";
     });
@@ -202,11 +214,13 @@ export default class Home extends Vue {
 
   generateMidi() {
     this.logger.silly("Enter actionCreateMidi");
-    this.midi.playFile(
+    this.midi.createMidiFile(
       this.midi.notesContent,
       this.settings.scale,
       this.settings.duration
     );
+    this.midi.player.play();
+
     this.logger.silly("Leave actionCreateMidi");
   }
 
@@ -238,7 +252,7 @@ export default class Home extends Vue {
 
     this.generateMidi();
     // this.logger.silly("create midi");
-    // this.midi.playFile(
+    // this.midi.createMidiFile(
     //   this.midi.notesContent,
     //   this.settings.scale,
     //   this.settings.duration

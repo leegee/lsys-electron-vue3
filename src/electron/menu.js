@@ -62,6 +62,28 @@ const template = [
   },
 
   {
+    label: "&MIDI",
+    submenu: [
+      {
+        label: "▶ &Play",
+        click: () => BrowserWindow.getFocusedWindow().webContents.send('midi-play')
+      },
+      {
+        label: "❚❚ &Pause",
+        click: () => BrowserWindow.getFocusedWindow().webContents.send('midi-pause')
+      },
+      {
+        label: "■ &Stop",
+        click: () => BrowserWindow.getFocusedWindow().webContents.send('midi-stop')
+      },
+      {
+        label: "⟳ &Regenerate",
+        click: () => BrowserWindow.getFocusedWindow().webContents.send('generate-midi')
+      },
+    ]
+  },
+
+  {
     label: "&Help",
     submenu: [
       {

@@ -48,7 +48,7 @@ describe('Inverted angles', () => {
 
     expect(midi.notesContent).not.toBe({ "off": {}, "on": {} });
 
-    midi.playFile(
+    midi.createMidiFile(
       midi.notesContent,
       'pentatonic minor',
       300
