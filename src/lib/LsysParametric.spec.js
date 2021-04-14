@@ -61,7 +61,7 @@ const expectContent = [
 // These options are fixed for every test:
 const defaultOptions = {
 	// An element into which the Lsys canvas can be inserted:
-	variables: "#define $W	  0.5\n" + "#define $AS  2\n" + "#define $BS  1\n" + "#define $R   1\n" + "#define $L	 -1",
+	contants: "#define $W	  0.5\n" + "#define $AS  2\n" + "#define $BS  1\n" + "#define $R   1\n" + "#define $L	 -1",
 	rules: "F($s,$o) : $s == $AS && $o == $R -> F($AS,$L)F($BS,$R)\n" + "F($s,$o) : $s == $AS && $o == $L -> F($BS,$L)F($AS,$R)\n" + "F($s,$o) : $s == $BS	           -> F($AS,$o)\n",
 	// Axiom
 	start: "!($W)F($BS,$R)"
@@ -71,7 +71,7 @@ describe('LsysParametric', () => {
 	describe('Constructor', () => {
 		it('with old args', () => {
 			var oldOptions = Object.assign({}, defaultOptions);
-			delete oldOptions.variables;
+			delete oldOptions.contants;
 			var lsys = new Lsys(oldOptions);
 			expect(lsys).to.be.instanceOf(Lsys);
 		});
@@ -134,9 +134,9 @@ describe('LsysParametric', () => {
 	});
 
 
-	describe('Bad variables option', function () {
+	describe('Bad contants option', function () {
 		var badOptions = Object.assign({}, defaultOptions);
-		badOptions.variables = 'This is not a variable definition.';
+		badOptions.contants = 'This is not a variable definition.';
 		try {
 			var lsys = new Lsys(badOptions);
 		} catch (e) {
@@ -148,12 +148,12 @@ describe('LsysParametric', () => {
 
 	describe('Variable parsing', function () {
 		var varOpts = Object.assign({}, defaultOptions);
-		varOpts.variables += "\n#define $Test -0.5";
+		varOpts.contants += "\n#define $Test -0.5";
 		var lsys = new Lsys(varOpts);
-		expect(lsys.variables.$AS).to.equal(2, 'positive int');
-		expect(lsys.variables.$L).to.equal(-1, 'negative int');
-		expect(lsys.variables.$W, 0.5).to.equal(0.5, 'positive float');
-		expect(lsys.variables.$Test).to.equal(-0.5, 'negative float');
+		expect(lsys.contants.$AS).to.equal(2, 'positive int');
+		expect(lsys.contants.$L).to.equal(-1, 'negative int');
+		expect(lsys.contants.$W, 0.5).to.equal(0.5, 'positive float');
+		expect(lsys.contants.$Test).to.equal(-0.5, 'negative float');
 	});
 
 	describe('Math routines', function () {

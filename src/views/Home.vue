@@ -7,7 +7,7 @@
           <p>
             <label title="#define name value"
               >Constants
-              <textarea id="variables" v-model="settings.variables" />
+              <textarea id="contants" v-model="settings.contants" />
             </label>
           </p>
 

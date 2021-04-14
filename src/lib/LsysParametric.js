@@ -37,7 +37,7 @@ export default class LsysParametric {
 	str2reRe = /(\w+)\(([^)]+)\)/g;
 	generation = 0;
 	totalGenerations = null;
-	variables = null;
+	contants = null;
 	options = {};
 	vMcontext = {};
 
@@ -52,9 +52,9 @@ export default class LsysParametric {
 		this.content = '';
 
 		this._castRules();
-		this._castVariables();
+		this._castcontants();
 
-		this.options.logger.info('Made new LsysParametric.\nVariables: %O\nRules:\n%O', this.variables, this.options.rules);
+		this.options.logger.info('Made new LsysParametric.\ncontants: %O\nRules:\n%O', this.contants, this.options.rules);
 	}
 
 	_setOptions(options = {}) {
@@ -83,8 +83,8 @@ export default class LsysParametric {
 		});
 	}
 
-	_castVariables(str) {
-		str = str || this.options.variables;
+	_castcontants(str) {
+		str = str || this.options.contants;
 		if (!str) return;
 		let rv = {};
 		str.split(/[\n\r\f]+/).forEach((line) => {
@@ -101,7 +101,7 @@ export default class LsysParametric {
 				throw new BadVariableDefinitionError("Bad variable definition:\n" + name2val + "\non line: \n" + line);
 			}
 		});
-		this.variables = rv;
+		this.contants = rv;
 		return rv;
 	}
 
@@ -173,7 +173,7 @@ export default class LsysParametric {
 	_interploateVars(str) {
 		const rv = str.replace(
 			this.interpolateVarsRe,
-			(match) => (typeof this.variables[match] !== 'undefined') ? this.variables[match] : match
+			(match) => (typeof this.contants[match] !== 'undefined') ? this.contants[match] : match
 		);
 		this.options.logger.verbose('Interpolate vars: %s ... %s', str, rv, this.interpolateVarsRe);
 		if (rv === null) {
@@ -227,7 +227,7 @@ export default class LsysParametric {
 					return;
 				}
 
-				// Re-write the rule to replace variables with literals where possible:
+				// Re-write the rule to replace contants with literals where possible:
 				const [rule2findRe, ruleArgNames] = this._string2reAndArgNames(rule[0]);
 
 				this.options.logger.silly('Rule ' + ruleNumber + ' says find ' + rule[0] + ' in content of ' + atom + ' using ', rule2findRe);
@@ -237,10 +237,10 @@ export default class LsysParametric {
 					rule2findRe,
 					([original, ..._arguments]) => {
 						/*  On entering this function, a match has been found but rules have yet to be tested */
-						// Ascribe variables
+						// Ascribe contants
 						let i = 0;
 						_arguments.filter(str => str.match(/\d+/)).forEach((numericValue) => {
-							this.variables[ruleArgNames[i]] = numericValue;
+							this.contants[ruleArgNames[i]] = numericValue;
 							i++;
 						});
 

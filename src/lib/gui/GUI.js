@@ -381,7 +381,7 @@ export default class GUI {
 
         const settings = {
             start: this.settings.start,
-            variables: this.settings.variables,
+            contants: this.settings.contants,
             rules: this.settings.rules,
             totalGenerations: totalGenerations || this.settings.totalGenerations
         }

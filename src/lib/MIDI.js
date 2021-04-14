@@ -238,7 +238,7 @@ export default class MIDI {
 
                 const noteEvent = {
                     pitch: note + octave,
-                    duration: 'T' + Math.ceil((notes.off[startTimeIndex][0] + timeOffset) * durationScaleFactor),
+                    duration: 'T' + 1, // Math.ceil((notes.off[startTimeIndex][0] + timeOffset) * durationScaleFactor),
                     startTick: Math.ceil((timeOffset + startTimeIndex) * durationScaleFactor),
                     velocity: Math.ceil((Object.keys(chordToPlay).length * velocityScaleFactor) + minVelocity),
                 };

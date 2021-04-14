@@ -2,7 +2,7 @@ export default [
     {
         title: 'Dev',
         totalGenerations: 1,
-        variables: '',
+        contants: '',
         start: 'X',
         initX: 0,
         initY: 0,
@@ -22,7 +22,7 @@ export default [
     {
         title: 'Weed',
         totalGenerations: 2,
-        variables: '',
+        contants: '',
         start: 'X',
         initX: 0,
         initY: 0,
@@ -41,7 +41,7 @@ export default [
 
     {
         title: 'Kock Ring Squared',
-        variables: '',
+        contants: '',
         rules: 'F -> FF-F-F-F-FF\n',
         start: 'F-F-F-F',
         angle: 90,
@@ -56,7 +56,7 @@ export default [
 
     {
         title: 'Kock Ring',
-        variables: '',
+        contants: '',
         rules: 'F -> C0FF-F-F-F-F-FC1+F\n',
         start: 'F-F-F-F',
         angle: 90,
@@ -73,7 +73,7 @@ export default [
 
     {
         title: 'Tree Balanced',
-        variables: '',
+        contants: '',
         rules: 'X -> C0FF[+X][-X]C1FC2X\n' +
             'F -> FF\n',
         start: 'X',
@@ -92,7 +92,7 @@ export default [
 
     {
         title: 'Parametric test',
-        variables: "#define $W 0.5\n" +
+        contants: "#define $W 0.5\n" +
             "#define $AS  2\n" +
             "#define $BS  1\n" +
             "#define $R   1\n" +
@@ -114,7 +114,7 @@ export default [
 
     {
         title: 'Tree 1',
-        variables: '',
+        contants: '',
         rules: 'F->C0FF-[C1-F+F+F]+[C2+F-F-F]',
         start: 'F',
         angle: 22,
@@ -131,7 +131,7 @@ export default [
 
     {
         title: 'Tree x',
-        variables: '',
+        contants: '',
         rules: "X->C0F-[C2[X]+C3X]+C1F[C3+FX]-X\nF->FF",
         start: 'X',
         angle: 27,
@@ -146,7 +146,7 @@ export default [
         wrapAtAngle: 12
     }, {
         title: 'Tree x',
-        variables: '',
+        contants: '',
         rules: "X->C0F-[C2[X]+C3X]+C1F[C3+FX]-X\nF->FF",
         start: 'X',
         angle: 27,
@@ -163,7 +163,7 @@ export default [
 
     {
         title: 'Sierpinski Median Curve (2 gens)',
-        variables: '',
+        contants: '',
         rules: "L->+R-F-R+\nR->-L+F+L-",
         start: 'L--F--L--F',
         angle: 45,
@@ -180,7 +180,7 @@ export default [
 
     {
         title: 'Sierpinski Median Curve (4 gens)',
-        variables: '',
+        contants: '',
         rules: "L->+R-F-R+\nR->-L+F+L-",
         start: 'L--F--L--F',
         angle: 45,
@@ -197,7 +197,7 @@ export default [
 
     {
         title: 'Koch Snowflake',
-        variables: '',
+        contants: '',
         rules: "F->F-F++F-F\nX->FF",
         start: 'F++F++F',
         angle: 60,
@@ -214,7 +214,7 @@ export default [
 
     {
         title: 'Tree 3',
-        variables: '',
+        contants: '',
         rules: 'F -> FF-[-F+F]+[+F-F]',
         start: 'F',
         angle: 22,
@@ -230,7 +230,7 @@ export default [
 
     {
         title: 'Tree 4',
-        variables: '',
+        contants: '',
         rules: "F -> F[-FF]F[+FF]F",
         start: 'F',
         angle: 22,
@@ -246,7 +246,7 @@ export default [
 
     {
         title: 'Dragon Curve',
-        variables: '',
+        contants: '',
         rules: "X->X+YF\nY->FX-Y",
         start: 'FX',
         angle: 90,
