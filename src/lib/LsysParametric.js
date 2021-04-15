@@ -52,7 +52,7 @@ export default class LsysParametric {
 		this.content = '';
 
 		this._castRules();
-		this._castcontants();
+		this._setConstants();
 
 		this.options.logger.info('Made new LsysParametric.\ncontants: %O\nRules:\n%O', this.contants, this.options.rules);
 	}
@@ -83,26 +83,30 @@ export default class LsysParametric {
 		});
 	}
 
-	_castcontants(str) {
+	_setConstants(str) {
 		str = str || this.options.contants;
-		if (!str) return;
-		let rv = {};
+
+		this.contants = {};
+
+		if (!str) {
+			return;
+		}
+
+
 		str.split(/[\n\r\f]+/).forEach((line) => {
 			// Detect
 			const name2val = line.match(/^\s*(#define)?\s*(\$\w+)\s*(\S+)\s*$/);
 			// Store
 			if (name2val) {
-				rv[name2val[2]] = name2val[3];
+				this.contants[name2val[2]] = name2val[3];
 				// Cast
-				if (rv[name2val[2]].match(/^(-+)?\d+(\.\d+)?$/)) {
-					rv[name2val[2]] = parseFloat(rv[name2val[2]]);
+				if (this.contants[name2val[2]].match(/^(-+)?\d+(\.\d+)?$/)) {
+					this.contants[name2val[2]] = parseFloat(this.contants[name2val[2]]);
 				}
 			} else {
 				throw new BadVariableDefinitionError("Bad variable definition:\n" + name2val + "\non line: \n" + line);
 			}
 		});
-		this.contants = rv;
-		return rv;
 	}
 
 	/**
