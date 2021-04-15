@@ -205,8 +205,8 @@ export default class MIDI {
         this.logger.silly('durationScaleFactor', durationScaleFactor);
         let minVelocity = 50;
 
-        this.track = new MidiWriter.Track();
-        this.track.addInstrumentName('Lsys');
+        const track = new MidiWriter.Track();
+        track.addInstrumentName('Lsys');
 
         const [lowestNote, highestNote, maxNotesInChord] = findNoteRanges(notes);
 
@@ -222,7 +222,7 @@ export default class MIDI {
 
         Object.keys(notes.on).forEach((startTimeIndex) => {
 
-            if (++notesRendered > 1) {
+            if (++notesRendered > 3) {
                 // return;
             }
 
@@ -247,7 +247,7 @@ export default class MIDI {
 
                 if (pitch < 128) {
                     this.logger.silly(startTick, noteEvent);
-                    this.track.addEvent(new MidiWriter.NoteEvent(noteEvent));
+                    track.addEvent(new MidiWriter.NoteEvent(noteEvent));
                 }
                 else {
                     this.logger.error('NOTE OUT OF BOUNDS > 127:', JSON.stringify(noteEvent));
@@ -257,7 +257,7 @@ export default class MIDI {
 
         this.logger.silly('Write MIDI', this.outputMidiPath);
 
-        const writer = new MidiWriter.Writer(this.track);
+        const writer = new MidiWriter.Writer(track);
         const data = writer.buildFile();
         fs.writeFileSync(this.outputMidiPath, data);
         this.logger.log('Wrote MIDI to', this.outputMidiPath);
