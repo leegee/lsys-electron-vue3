@@ -34,17 +34,8 @@ const template = [
   },
 
   {
-    label: "Ac&tions",
-    submenu: [
-      {
-        label: "&Clear Canvases",
-        click: () => BrowserWindow.getFocusedWindow().webContents.send('clear-canvases')
-      },
-      {
-        label: "Show &MIDI File",
-        click: () => shell.showItemInFolder(this.midiFilePath),
-      },
-    ],
+    label: "&Clear Canvases",
+    click: () => BrowserWindow.getFocusedWindow().webContents.send('clear-canvases')
   },
 
   {
@@ -79,6 +70,11 @@ const template = [
       {
         label: "⟳ &Regenerate",
         click: () => BrowserWindow.getFocusedWindow().webContents.send('generate-midi')
+      },
+      { role: "separator" },
+      {
+        label: "Show &MIDI File",
+        click: () => shell.showItemInFolder(this.midiFilePath),
       },
     ]
   },
