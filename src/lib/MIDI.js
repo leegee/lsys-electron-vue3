@@ -196,55 +196,57 @@ export default class MIDI {
     @param {object} notes.off note off values
      */
     create(notes, scaleOfNoteLetters, durationScaleFactor) {
-
         this.logger.silly('MIDI.create---------------->', JSON.stringify(notes, {}, '    '));
 
         if (!notes) {
-            throw new Error('No notes supplied to MIDI.create');
+            throw new TypeError('No notes supplied to MIDI.create');
         }
 
         this.logger.silly('durationScaleFactor', durationScaleFactor);
         let minVelocity = 50;
 
         this.track = new MidiWriter.Track();
-
-        this.logger.silly('xxxx', notes.on);
+        this.track.addInstrumentName('Lsys');
 
         const [lowestNote, highestNote, maxNotesInChord] = findNoteRanges(notes);
 
         const velocityScaleFactor = 127 / (127 - minVelocity);
-        this.logger.info('Velocity min/max notes/factor', minVelocity, maxNotesInChord, velocityScaleFactor);
 
         const pitchOffset = MIDI.pitchOffset(lowestNote, highestNote);
+
+        this.logger.info('Velocity min, scale factor', minVelocity, velocityScaleFactor);
+        this.logger.info('Max notes in chord', maxNotesInChord);
         this.logger.info('Pitch offset', pitchOffset);
 
-        let timeOffset = Math.min(...Object.keys(notes.on));
-        if (timeOffset < 0) {
-            timeOffset = Math.ceil(Math.abs(timeOffset));
-        } else {
-            timeOffset = 0;
-        }
-        this.logger.info('Time Offset', timeOffset);
+        let notesRendered = 0;
 
         Object.keys(notes.on).forEach((startTimeIndex) => {
-            const chordToPlay = {};
+
+            if (++notesRendered > 1) {
+                // return;
+            }
 
             notes.on[startTimeIndex].forEach((noteValue) => {
-                const pitch = pitchOffset + Math.round(noteValue); // Here fit to scale
-                const noteIndex = Math.abs(pitch) % scaleOfNoteLetters.length;
+                const pitch = Math.abs(pitchOffset + Math.round(noteValue)); // Here fit to scale
+                const noteIndex = pitch % scaleOfNoteLetters.length;
                 const note = scaleOfNoteLetters[noteIndex];
-                const octave = Math.round(Math.abs(pitch) / (127 / 8));
-                // this.logger.silly({ startTimeIndex, pitchOffset, pitch, noteIndex, note, octave, durationScaleFactor, timeOffset });
+                const octave = Math.round(pitch / (127 / 8));
+
+                // const startTick = 1 + (Math.ceil((timeOffset + startTimeIndex) * durationScaleFactor));
+                // const duration = Math.ceil((notes.off[startTimeIndex][0] + timeOffset) * durationScaleFactor);
+
+                const startTick = Math.ceil(startTimeIndex * 20);
+                const duration = 128;
 
                 const noteEvent = {
                     pitch: note + octave,
-                    duration: 'T' + 1, // Math.ceil((notes.off[startTimeIndex][0] + timeOffset) * durationScaleFactor),
-                    startTick: Math.ceil((timeOffset + startTimeIndex) * durationScaleFactor),
-                    velocity: Math.ceil((Object.keys(chordToPlay).length * velocityScaleFactor) + minVelocity),
+                    duration: 'T' + duration,
+                    startTick,
+                    velocity: velocityScaleFactor * minVelocity,
                 };
 
-                if (pitch <= 127) {
-                    this.logger.silly(noteEvent);
+                if (pitch < 128) {
+                    this.logger.silly(startTick, noteEvent);
                     this.track.addEvent(new MidiWriter.NoteEvent(noteEvent));
                 }
                 else {
@@ -253,11 +255,12 @@ export default class MIDI {
             });
         });
 
-        this.logger.log('Write', this.outputMidiPath);
+        this.logger.silly('Write MIDI', this.outputMidiPath);
+
         const writer = new MidiWriter.Writer(this.track);
         const data = writer.buildFile();
         fs.writeFileSync(this.outputMidiPath, data);
-        this.logger.log('Written');
+        this.logger.log('Wrote MIDI to', this.outputMidiPath);
     }
 
 }

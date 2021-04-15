@@ -2,6 +2,9 @@
 
 ## WIP
 
-* Add `vm` to replace `eval`
+* `midi-writer` bug - try rendering one note, then two notes.
+
+* `constants` to `vm.context`
+
 * Web MIDI out
 
