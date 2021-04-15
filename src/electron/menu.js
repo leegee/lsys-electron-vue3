@@ -1,12 +1,7 @@
 import { BrowserWindow, Menu, shell } from 'electron';
 
 import Presets from "@/lib/Presets";
-import { setupDevices } from "@/lib/MIDIdevices";
 import logger from "@/lib/gui/Logger";
-
-(async function () {
-  await setupDevices();
-}());
 
 const template = [
   {
