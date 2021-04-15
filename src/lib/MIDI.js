@@ -18,7 +18,7 @@ jzzElectron(JZZ);
 
 import fs from 'fs';
 import { Scale } from 'tonal';
-import MidiWriter from 'midi-writer-js';
+import MidiWriter from '@/lib/midi-writer-js';
 
 import Logger from './gui/Logger';
 import EventPlayNote from '@/lib/EventPlayNote.js';
