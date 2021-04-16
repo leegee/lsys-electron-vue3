@@ -190,6 +190,25 @@ export default class Home extends Vue {
     });
 
     this.loadPreset();
+
+    window.addEventListener("keypress", this.keypressHandler);
+  }
+
+  unmounted() {
+    window.removeEventListener("keypress", this.keypressHandler);
+  }
+
+  keypressHandler(e) {
+    console.log(e);
+    if (
+      !(
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+    ) {
+      e.preventDefault();
+      this.midi.player.pause();
+    }
   }
 
   loadPreset(idx = 0) {
