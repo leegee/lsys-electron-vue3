@@ -1,5 +1,5 @@
 <template>
-  <section :class="{ working: working === true }">
+  <section :class="{ working: working }">
     <form>
       <div class="column">
         <fieldset>
@@ -7,13 +7,13 @@
           <p>
             <label title="#define name value"
               >Constants
-              <textarea id="contants" v-model="settings.contants" />
+              <textarea v-model="settings.contants" />
             </label>
           </p>
 
           <p>
             <label title="F(x,y): x==1 && y==2 => NewPattern">Rules </label>
-            <textarea id="rules" v-model="settings.rules" />
+            <textarea v-model="settings.rules" class="larger" />
           </p>
 
           <p>
@@ -117,7 +117,7 @@
 
         <fieldset>
           <legend>Output</legend>
-          <textarea id="contentDisplay" v-model="settings.contentDisplay" />
+          <textarea v-model="settings.contentDisplay" class="larger" />
         </fieldset>
 
         <!-- <MidiController /> -->
@@ -226,6 +226,7 @@ export default class Home extends Vue {
 
   generateAll() {
     this.logger.debug("Enter generateAll");
+
     this.working = true;
     const canvas = window.document.createElement("canvas");
     this.$refs.canvases.insertBefore(canvas, this.$refs.canvases.firstChild);
@@ -251,13 +252,6 @@ export default class Home extends Vue {
     this.lsysRenderer.finalise();
 
     this.generateMidi();
-    // this.logger.silly("create midi");
-    // this.midi.createMidiFile(
-    //   this.midi.notesContent,
-    //   this.settings.scale,
-    //   this.settings.duration
-    // );
-    // this.logger.silly("done create midi");
 
     canvas.addEventListener("click", (e) => {
       e.preventDefault();
@@ -274,10 +268,6 @@ export default class Home extends Vue {
 }
 </script>
 
-
-
-
-
 <style scoped>
 section {
   color: white;
@@ -286,10 +276,12 @@ section {
   width: 100%;
   overflow: auto;
 }
-section.working {
+
+.working {
   display: none;
   cursor: progress;
 }
+
 .column {
   width: 50%;
   float: left;
@@ -313,13 +305,17 @@ input[type="text"] {
   margin-top: 1rem;
   padding: 1rem 0;
 }
-textarea {
-  width: 100%;
-}
 textarea,
 input,
 select {
   background: silver;
+}
+textarea {
+  width: 100%;
+}
+
+.larger {
+  height: 4rem;
 }
 
 label,
